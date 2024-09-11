@@ -1,4 +1,4 @@
-name: Deploy Lambda Function
+name: Testes com Lambda
 
 on:
   push:
@@ -10,30 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checando Repo
       uses: actions/checkout@v3
 
-    - name: Set up Node.js
+    - name: Set up do Node
       uses: actions/setup-node@v3
       with:
-        node-version: '16' 
+        node-version: '20' 
 
-    - name: Install dependencies
+    - name: NPM
       run: npm install
 
-    - name: Install dependencies
+    - name: AWS Teste
       run: aws help
 
     - name: Zip Lambda function
       run: zip -r function.zip .
 
-    - name: Configure AWS credentials
+    - name: Configurando as credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: "ASIAWOWQJN7MBGVNOXYI"
+        aws-secret-access-key: "i4R8DH3D4YTKqHFULhGFCERMsYTLP7tEZ7ldkqm3"
         aws-region: us-east-1  
 
     - name: Deploy to AWS Lambda
       run: |
-        aws lambda update-function-code --function-name nome-da-sua-lambda --zip-file file:"C:\Users\Rafael Paes\Documents\FIAP\lambda-fiaptrust-policy.json"
+        aws lambda update-function-code --function-name lambda-fiap --zip-file file:"C:\Users\Rafael Paes\Documents\FIAP\lambda-fiaptrust-policy.json"
