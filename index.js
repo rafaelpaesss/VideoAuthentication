@@ -1,4 +1,3 @@
-// handler.js
 exports.handler = async (event) => {
     // Extrair o CPF do corpo da solicitação
     const body = JSON.parse(event.body);
