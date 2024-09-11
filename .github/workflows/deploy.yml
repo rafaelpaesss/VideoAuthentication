@@ -36,4 +36,4 @@ jobs:
         aws-region: us-east-1  
 
     - name: Deploy do API Gateway
-      run: aws apigateway create-http-api --name "api-auth2" --description "Api Gateway para testes"
+      run: aws apigateway create-rest-api --name "api-auth2" --description "Api Gateway para testes" --protocol http
