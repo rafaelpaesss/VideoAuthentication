@@ -28,7 +28,7 @@ jobs:
       run: zip -r function.zip .
 
     - name: Configurando as credentials
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v3
       with:
         aws-access-key-id: "ASIAWOWQJN7MBGVNOXYI"
         aws-secret-access-key: "i4R8DH3D4YTKqHFULhGFCERMsYTLP7tEZ7ldkqm3"
