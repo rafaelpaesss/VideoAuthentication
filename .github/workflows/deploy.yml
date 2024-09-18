@@ -89,7 +89,6 @@ jobs:
           --stage-name "dev" \
           --deployment-id $DEPLOYMENT_ID
 
-    # Dar permissão ao Lambda para ser invocado pelo API Gateway
     - name: Dar permissão ao Lambda
       run: |
         aws lambda add-permission \
@@ -97,4 +96,4 @@ jobs:
           --statement-id apigateway-access \
           --action lambda:InvokeFunction \
           --principal apigateway.amazonaws.com \
-          --source-arn /*/*/*
+          --source-arn arn:aws:execute-api:us-east-1:443892199384:${{ env.API_ID }}/*/GET/users/{userId}
