@@ -62,7 +62,7 @@ jobs:
         INTEGRATION_ID=$(aws apigatewayv2 create-integration \
           --api-id ${{ env.API_ID }} \
           --integration-type AWS_PROXY \
-          --integration-uri arn:aws:lambda:us-east-1:443892199384:function:getUserByCpf/invocations \
+          --integration-uri arn:aws:lambda:us-east-1:443892199384:function:getUserByCpf \
           --payload-format-version 2.0 \
           --query "IntegrationId" \
           --output text)
