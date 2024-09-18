@@ -55,7 +55,7 @@ jobs:
           --zip-file fileb://lambda.zip \
           --timeout 10 \
           --memory-size 128 \
-          --role arn:aws:iam::443892199384:role/RedshiftRole
+          --role arn:aws:iam::443892199384:role/LabRole
 
     - name: Criar integração Lambda
       run: |
