@@ -36,4 +36,63 @@ jobs:
         aws-region: us-east-1  
 
     - name: Deploy do API Gateway
-      run: aws apigatewayv2 create-api --name "api-auth2" --protocol-type HTTP --description "Api Gateway para testes"
+      run: |
+        API_ID=$(aws apigatewayv2 create-api \
+          --name "apiGatewayLambda" \
+          --protocol-type HTTP \
+          --description "Api Gateway para utilização da lambda de validação de user" \
+          --query "ApiId" \
+          --output text)
+        echo "API_ID=$API_ID" >> $GITHUB_ENV
+
+      # Criar Lambda
+    - name: Criar Lambda function
+      run: |
+        aws lambda create-function \
+          --function-name getUserByCpf \
+          --runtime nodejs20.x \
+          --handler index.handler \
+          --zip-file fileb://lambda.zip \
+          --timeout 10
+
+    - name: Criar integração Lambda
+      run: |
+        INTEGRATION_ID=$(aws apigatewayv2 create-integration \
+          --api-id ${{ env.API_ID }} \
+          --integration-type AWS_PROXY \
+          --integration-uri arn:aws:lambda:us-east-1:443892199384:function:getUserByCpf/invocations \
+          --payload-format-version 2.0 \
+          --query "IntegrationId" \
+          --output text)
+        echo "INTEGRATION_ID=$INTEGRATION_ID" >> $GITHUB_ENV          
+
+    # Criar rota GET /users/{userId}
+    - name: Criar rota GET /users/{userId}
+      run: |
+        aws apigatewayv2 create-route \
+          --api-id ${{ env.API_ID }} \
+          --route-key "GET /users/{userId}" \
+          --target integrations/${{ env.INTEGRATION_ID }}
+
+    # Criar a implementação e associar ao stage 'dev'
+    - name: Criar deploy da API
+      run: |
+        DEPLOYMENT_ID=$(aws apigatewayv2 create-deployment \
+          --api-id ${{ env.API_ID }} \
+          --query "DeploymentId" \
+          --output text)
+        echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
+        aws apigatewayv2 create-stage \
+          --api-id ${{ env.API_ID }} \
+          --stage-name "dev" \
+          --deployment-id ${{ env.DEPLOYMENT_ID }}
+
+    # Dar permissão ao Lambda para ser invocado pelo API Gateway
+    - name: Dar permissão ao Lambda
+      run: |
+        aws lambda add-permission \
+          --function-name getUserByCpf \
+          --statement-id apigateway-access \
+          --action lambda:InvokeFunction \
+          --principal apigateway.amazonaws.com \
+          --source-arn /*/*/*
