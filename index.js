@@ -1,7 +1,6 @@
 exports.handler = async (event) => {
-    // Extrair o CPF do corpo da solicitação
-    const body = JSON.parse(event.body);
-    const cpf = body.cpf;
+    // Extrair o CPF dos parâmetros de caminho
+    const cpf = event.pathParameters.cpf;
 
     // Validação básica do CPF (exemplo)
     if (!cpf || cpf.length !== 11) {
@@ -29,7 +28,6 @@ exports.handler = async (event) => {
 
 // Função que simula a verificação do CPF no sistema de autenticação
 function checkCpfInAuthSystem(cpf) {
-    // Exemplo de CPFs autorizados (normalmente você faria uma consulta a um banco de dados)
-    const authorizedCpfs = ["12345678901", "09876543210"]; // Exemplos de CPFs autorizados
+    const authorizedCpfs = ["12345678901", "09876543210"]; // Exemplo de CPFs autorizados
     return authorizedCpfs.includes(cpf);
 }

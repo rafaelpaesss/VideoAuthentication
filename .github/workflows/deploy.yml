@@ -69,12 +69,13 @@ jobs:
         echo "INTEGRATION_ID=$INTEGRATION_ID" >> $GITHUB_ENV          
 
     # Criar rota GET /users/{userId}
-    - name: Criar rota GET /users/{userId}
+    - name: Criar rota GET /users/{cpf}
       run: |
         aws apigatewayv2 create-route \
           --api-id ${{ env.API_ID }} \
-          --route-key "GET /users/{userId}" \
+          --route-key "GET /users/{cpf}" \
           --target integrations/${{ env.INTEGRATION_ID }}
+  
 
     # Criar a implementação e associar ao stage 'dev'
     - name: Criar deploy da API
