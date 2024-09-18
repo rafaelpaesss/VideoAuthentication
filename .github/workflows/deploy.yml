@@ -87,7 +87,7 @@ jobs:
         aws apigatewayv2 create-stage \
           --api-id ${{ env.API_ID }} \
           --stage-name "dev" \
-          --deployment-id ${{ env.DEPLOYMENT_ID }}
+          --deployment-id $DEPLOYMENT_ID
 
     # Dar permissão ao Lambda para ser invocado pelo API Gateway
     - name: Dar permissão ao Lambda
