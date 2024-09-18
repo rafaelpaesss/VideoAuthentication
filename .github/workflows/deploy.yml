@@ -55,7 +55,7 @@ jobs:
           --zip-file fileb://lambda.zip \
           --timeout 10 \
           --memory-size 128 \
-          --role arn:aws:iam::123456789012:role/LambdaExecutionRole
+          --role arn:aws:iam::123456789012:role/LabRole
 
     - name: Criar integração Lambda
       run: |
