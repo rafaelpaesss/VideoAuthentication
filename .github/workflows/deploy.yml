@@ -25,7 +25,7 @@ jobs:
       run: aws help
 
     - name: Zip Lambda function
-      run: zip -r function.zip .
+      run: zip -r lambda.zip .
 
     - name: Configurando as credentials
       uses: aws-actions/configure-aws-credentials@v3
@@ -55,7 +55,7 @@ jobs:
           --zip-file fileb://lambda.zip \
           --timeout 10 \
           --memory-size 128 \
-          --role arn:aws:iam::123456789012:role/LabRole
+          --role arn:aws:iam::123456789012:role/myRedshiftRole
 
     - name: Criar integração Lambda
       run: |
