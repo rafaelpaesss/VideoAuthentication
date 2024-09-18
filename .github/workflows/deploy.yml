@@ -46,14 +46,16 @@ jobs:
         echo "API_ID=$API_ID" >> $GITHUB_ENV
 
       # Criar Lambda
-    - name: Criar Lambda function
+    - name: Criar Lambda
       run: |
         aws lambda create-function \
           --function-name getUserByCpf \
           --runtime nodejs20.x \
           --handler index.handler \
           --zip-file fileb://lambda.zip \
-          --timeout 10
+          --timeout 10 \
+          --memory-size 128 \
+          --role arn:aws:iam::123456789012:role/LambdaExecutionRole
 
     - name: Criar integração Lambda
       run: |
