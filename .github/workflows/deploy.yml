@@ -71,7 +71,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: us-east-1  
+        aws-region: us-east-1
 
     - name: Deploy do API Gateway
-      run: aws apigateway create-http-api --name "api-auth2" --description "Api Gateway para testes"
+      run: aws apigateway create-http-api --name "api-auth2" --description "Api Gateway para testes 2"
