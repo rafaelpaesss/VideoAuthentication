@@ -1,8 +1,8 @@
 exports.handler = async (event) => {
-    // Extrair o CPF dos parâmetros de caminho
-    const cpf = event.pathParameters.cpf;
+    // Extrair o CPF dos parâmetros de consulta
+    const cpf = event.queryStringParameters.cpf;
 
-    // Validação básica do CPF (exemplo)
+    // Validação básica do CPF
     if (!cpf || cpf.length !== 11) {
         return {
             statusCode: 400,
