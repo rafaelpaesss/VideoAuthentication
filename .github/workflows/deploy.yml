@@ -86,7 +86,7 @@ jobs:
         aws apigatewayv2 update-route \
           --api-id ${{ env.API_ID }} \
           --route-id $ROUTE_ID \
-          --request-parameters '{"querystring.cpf": {"Required": false}}'
+          --request-parameters '{"querystring.cpf": {"Required": true, "Mapping": "$request.querystring.cpf"}}'
 
     # Criar a implementação e associar ao stage 'dev'
     - name: Criar deploy da API
