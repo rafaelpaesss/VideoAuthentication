@@ -75,7 +75,7 @@ jobs:
           --route-key "GET /users" \
           --target integrations/${{ env.INTEGRATION_ID }}
 
-    # Adicionar mapeamento de parâmetro correto
+    # Atualizar o mapeamento de parâmetros da rota GET /users para query string
     - name: Adicionar mapeamento de parâmetro
       run: |
         ROUTE_ID=$(aws apigatewayv2 get-routes \
