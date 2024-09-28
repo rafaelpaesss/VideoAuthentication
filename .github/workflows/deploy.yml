@@ -16,36 +16,39 @@ jobs:
     - name: Set up do Node
       uses: actions/setup-node@v3
       with:
-        node-version: '20' 
+        node-version: '20'
 
-    - name: NPM
+    - name: NPM Install
       run: npm install
 
-    - name: AWS Teste
-      run: aws help
+    - name: Instalar Dependências do MySQL
+      run: npm install mysql2
+
+    - name: Verificar AWS CLI
+      run: aws --version
 
     - name: Zip Lambda function
-      run: zip -r lambda.zip .
+      run: zip -r lambda.zip index.js node_modules
 
-    - name: Configurando as credentials
+    - name: Configurar Credenciais AWS
       uses: aws-actions/configure-aws-credentials@v3
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: us-east-1  
+        aws-region: us-east-1
 
-    - name: Deploy do API Gateway
+    - name: Criar API Gateway
       run: |
         API_ID=$(aws apigatewayv2 create-api \
           --name "apiGatewayLambda" \
           --protocol-type HTTP \
-          --description "Api Gateway para utilização da lambda de validação de user" \
+          --description "API Gateway para Lambda de validação de usuário" \
           --query "ApiId" \
           --output text)
         echo "API_ID=$API_ID" >> $GITHUB_ENV
 
-    - name: Criar Lambda
+    - name: Criar Função Lambda
       run: |
         aws lambda create-function \
           --function-name getUserByCpf \
@@ -56,7 +59,7 @@ jobs:
           --memory-size 128 \
           --role arn:aws:iam::443892199384:role/LabRole
 
-    - name: Criar integração Lambda
+    - name: Criar Integração Lambda no API Gateway
       run: |
         INTEGRATION_ID=$(aws apigatewayv2 create-integration \
           --api-id ${{ env.API_ID }} \
@@ -65,18 +68,16 @@ jobs:
           --payload-format-version 2.0 \
           --query "IntegrationId" \
           --output text)
-        echo "INTEGRATION_ID=$INTEGRATION_ID" >> $GITHUB_ENV          
+        echo "INTEGRATION_ID=$INTEGRATION_ID" >> $GITHUB_ENV
 
-    # Criar rota GET /users/{cpf}
-    - name: Criar rota GET /users/{cpf}
+    - name: Criar Rota GET /users/{cpf}
       run: |
         aws apigatewayv2 create-route \
           --api-id ${{ env.API_ID }} \
           --route-key "GET /users/{cpf}" \
           --target integrations/${{ env.INTEGRATION_ID }}
 
-    # Criar a implementação e associar ao stage 'dev'
-    - name: Criar deploy da API
+    - name: Criar Deploy da API
       run: |
         DEPLOYMENT_ID=$(aws apigatewayv2 create-deployment \
           --api-id ${{ env.API_ID }} \
@@ -88,7 +89,7 @@ jobs:
           --stage-name "dev" \
           --deployment-id $DEPLOYMENT_ID
 
-    - name: Dar permissão ao Lambda
+    - name: Dar Permissão ao Lambda
       run: |
         aws lambda add-permission \
           --function-name getUserByCpf \
