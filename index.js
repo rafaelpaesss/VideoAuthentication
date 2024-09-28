@@ -44,7 +44,7 @@ exports.handler = async (event) => {
 
     } catch (error) {
 
-        # Tratamento em caso de erro ao conectar
+        // Tratamento em caso de erro ao conectar
         
         console.error('Erro ao conectar ao banco de dados:', error);
         return {
