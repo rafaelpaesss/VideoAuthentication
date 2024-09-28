@@ -2,10 +2,10 @@ const mysql = require('mysql2/promise'); // Importando o cliente MySQL
 
 // Conexão com o Banco (validar o host/user)
 const dbConfig = {
-    host: 'endpoint',
-    user: 'user',
-    password: 'pass',
-    database: 'dbMySql',
+    host: 'db.czaiykumil61.us-east-1.rds.amazonaws.com',
+    user: 'admin',
+    password: 'Fiap2024',
+    database: 'db',
 };
 
 exports.handler = async (event) => {
