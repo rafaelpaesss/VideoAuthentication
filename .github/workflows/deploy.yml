@@ -21,9 +21,15 @@ jobs:
     - name: NPM Install
       run: npm install
 
+    - name: Exportar Secrets para Variáveis de Ambiente
+      run: |
+        echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+        echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+   
     - name: Instalar Dependências do MySQL
       run: npm install mysql2
-
+      
     - name: Verificar AWS CLI
       run: aws --version
 
