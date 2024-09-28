@@ -1,11 +1,11 @@
 const mysql = require('mysql2/promise'); // Importando o cliente MySQL
 
-// Conexão com o Banco (validar o host/user)
+// Usando variáveis de ambiente definidas no GitHub Actions
 const dbConfig = {
-    host: 'db.czaiykumil61.us-east-1.rds.amazonaws.com',
-    user: 'admin',
-    password: 'Fiap2024',
-    database: 'db',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: 'dbMySql',
 };
 
 exports.handler = async (event) => {
@@ -43,9 +43,6 @@ exports.handler = async (event) => {
         }
 
     } catch (error) {
-
-        // Tratamento em caso de erro ao conectar
-        
         console.error('Erro ao conectar ao banco de dados:', error);
         return {
             statusCode: 500,
