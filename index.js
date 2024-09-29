@@ -1,18 +1,18 @@
-const mysql = require('mysql2/promise'); // Importando o cliente MySQL
+const AWS = require('aws-sdk');
 
-// Usando variáveis de ambiente definidas no GitHub Actions
-const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: 'dbMySql',
-};
+// Definindo a região onde está o Cognito e configurando o User Pool
+const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
+
+// Configuração do User Pool ID e Client ID 
+const userPoolId = 'us-east-1_snsoWe2Zh'; 
+const clientId = 'h42k75qqd2982klbtdp8g4i0t'; 
 
 exports.handler = async (event) => {
-    // Extrair os parâmetros da chamada da api
+    // Extrair os parâmetros da chamada da API
     const cpf = event.queryStringParameters?.cpf;
+    const password = event.queryStringParameters?.password;
 
-    // Validação básica
+    // Validação básica do CPF e da senha
     if (!cpf || cpf.length !== 11) {
         return {
             statusCode: 400,
@@ -20,30 +20,49 @@ exports.handler = async (event) => {
         };
     }
 
+    if (!password) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: "Senha não fornecida" })
+        };
+    }
+
     try {
-        // Realizando Conexão
-        const connection = await mysql.createConnection(dbConfig);
+        // Definir os parâmetros para autenticar o usuário
+        const authParams = {
+            AuthFlow: 'ADMIN_NO_SRP_AUTH',
+            UserPoolId: userPoolId,
+            ClientId: clientId,
+            AuthParameters: {
+                USERNAME: cpf,  // Utilizando o CPF como nome de usuário
+                PASSWORD: password // Validando a senha fornecida
+            }
+        };
 
-        // Consulta do CPF no banco
-        const [rows] = await connection.execute('SELECT * FROM customers WHERE cpf = ?', [cpf]);
-        
-        await connection.end();
+        // Autenticar o usuário no Cognito
+        const authResponse = await cognito.adminInitiateAuth(authParams).promise();
 
-        // Resposta com base na validação
-        if (rows.length > 0) {
-            return {
-                statusCode: 200,
-                body: JSON.stringify({ message: "Autenticação bem-sucedida" })
-            };
-        } else {
+        // Se a autenticação for bem-sucedida, retorna o token
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                message: "Autenticação bem-sucedida",
+                accessToken: authResponse.AuthenticationResult.AccessToken
+            })
+        };
+
+    } catch (error) {
+        console.error('Erro ao autenticar o usuário no Cognito:', error);
+
+        // Retornando erro de autenticação
+        if (error.code === 'NotAuthorizedException') {
             return {
                 statusCode: 401,
-                body: JSON.stringify({ error: "CPF não encontrado ou não autorizado" })
+                body: JSON.stringify({ error: "Senha incorreta ou usuário não autorizado" })
             };
         }
 
-    } catch (error) {
-        console.error('Erro ao conectar ao banco de dados:', error);
+        // Outros erros
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "Erro interno do servidor" })
