@@ -30,7 +30,7 @@ exports.handler = async (event) => {
     try {
         // Definir os parâmetros para autenticar o usuário
         const authParams = {
-            AuthFlow: 'CUSTOM_AUTH',
+            AuthFlow: 'USER_PASSWORD_AUTH',
             UserPoolId: userPoolId,
             ClientId: clientId,
             AuthParameters: {
