@@ -3,7 +3,7 @@ name: Deploy Cognito
 on:
   push:
     branches:
-      - main  
+      - main  # Executa o deploy quando há push na branch main
 
 jobs:
   deploy:
@@ -25,7 +25,7 @@ jobs:
       id: create_user_pool
       run: |
         USER_POOL_ID=$(aws cognito-idp create-user-pool \
-          --pool-name "users" \
+          --pool-name "MyUserPool" \
           --policies '{
             "PasswordPolicy": {
               "MinimumLength": 8,
@@ -46,7 +46,7 @@ jobs:
           --user-pool-id ${{ env.USER_POOL_ID }} \
           --client-name "MyAppClient" \
           --no-generate-secret \
-          --explicit-auth-flows "ALLOW_USER_PASSWORD_AUTH" "ALLOW_USER_SRP_AUTH" \
+          --explicit-auth-flows "ALLOW_USER_PASSWORD_AUTH" "ALLOW_USER_SRP_AUTH" "ALLOW_REFRESH_TOKEN_AUTH" \
           --query "UserPoolClient.ClientId" \
           --output text)
         echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
