@@ -30,7 +30,7 @@ exports.handler = async (event) => {
     try {
         // Definir os parâmetros para autenticar o usuário
         const authParams = {
-            AuthFlow: 'USER_PASSWORD_AUTH',
+            AuthFlow: 'USER_PASSWORD_AUTH', // Verifique se este fluxo está habilitado
             UserPoolId: userPoolId,
             ClientId: clientId,
             AuthParameters: {
@@ -40,7 +40,7 @@ exports.handler = async (event) => {
         };
 
         // Autenticar o usuário no Cognito
-        const authResponse = await cognito.adminInitiateAuth(authParams).promise();
+        const authResponse = await cognito.initiateAuth(authParams).promise();
 
         // Se a autenticação for bem-sucedida, retorna o token
         return {
