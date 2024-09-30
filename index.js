@@ -1,10 +1,9 @@
 const AWS = require('aws-sdk');
 
-// Definindo a região onde está o Cognito e configurando o User Pool
+// Definindo a região onde está o Cognito
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
 
-// Configuração do User Pool ID e Client ID 
-const userPoolId = 'us-east-1_9sxYnOzXp'; 
+// Configuração do Client ID 
 const clientId = '5s4e0chc0ses3nr9i5196604ub'; 
 
 exports.handler = async (event) => {
@@ -31,8 +30,7 @@ exports.handler = async (event) => {
         // Definir os parâmetros para autenticar o usuário
         const authParams = {
             AuthFlow: 'USER_PASSWORD_AUTH', // Verifique se este fluxo está habilitado
-            UserPoolId: userPoolId,
-            ClientId: clientId,
+            ClientId: clientId, // Remova o UserPoolId
             AuthParameters: {
                 USERNAME: cpf,  // Utilizando o CPF como nome de usuário
                 PASSWORD: password // Validando a senha fornecida
