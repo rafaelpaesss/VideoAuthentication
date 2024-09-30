@@ -24,8 +24,8 @@ jobs:
         echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
         echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
 
-    - name: NPM Install com aws-sdk
-      run: npm install aws-sdk mysql2
+    - name: NPM Install
+      run: npm install 
 
     - name: Verificar AWS CLI
       run: aws --version
