@@ -1,0 +1,62 @@
+name: Deploy Cognito
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checando Repo
+      uses: actions/checkout@v3
+
+    - name: Configurar Credenciais AWS
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Criar User Pool
+      id: create_user_pool
+      run: |
+        USER_POOL_ID=$(aws cognito-idp create-user-pool \
+          --pool-name "users" \
+          --policies '{
+            "PasswordPolicy": {
+              "MinimumLength": 8,
+              "RequireUppercase": true,
+              "RequireNumbers": true,
+              "RequireSymbols": true,
+              "TemporaryPasswordValidityDays": 7
+            }
+          }' \
+          --query "UserPool.Id" \
+          --output text)
+        echo "USER_POOL_ID=$USER_POOL_ID" >> $GITHUB_ENV
+
+    - name: Criar App Client
+      id: create_app_client
+      run: |
+        CLIENT_ID=$(aws cognito-idp create-user-pool-client \
+          --user-pool-id ${{ env.USER_POOL_ID }} \
+          --client-name "MyAppClient" \
+          --no-generate-secret \
+          --explicit-auth-flows "ALLOW_USER_PASSWORD_AUTH" "ALLOW_USER_SRP_AUTH" \
+          --query "UserPoolClient.ClientId" \
+          --output text)
+        echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
+
+    - name: Configurar Atributos Personalizados
+      run: |
+        aws cognito-idp add-custom-attributes \
+          --user-pool-id ${{ env.USER_POOL_ID }} \
+          --custom-attributes '[{"Name": "cpf", "AttributeDataType": "String", "StringAttributeConstraints": {"MinLength": "11", "MaxLength": "11"}}]'
+
+    - name: Exibir User Pool ID e App Client ID
+      run: |
+        echo "User Pool ID: ${{ env.USER_POOL_ID }}"
+        echo "App Client ID: ${{ env.CLIENT_ID }}"
