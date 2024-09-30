@@ -30,7 +30,7 @@ exports.handler = async (event) => {
     try {
         // Definir os parâmetros para autenticar o usuário
         const authParams = {
-            AuthFlow: 'ALLOW_USER_SRP_AUTH',
+            AuthFlow: 'CUSTOM_AUTH',
             UserPoolId: userPoolId,
             ClientId: clientId,
             AuthParameters: {
