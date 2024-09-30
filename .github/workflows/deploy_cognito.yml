@@ -25,7 +25,7 @@ jobs:
       id: create_user_pool
       run: |
         USER_POOL_ID=$(aws cognito-idp create-user-pool \
-          --pool-name "MyUserPool" \
+          --pool-name "users" \
           --policies '{
             "PasswordPolicy": {
               "MinimumLength": 8,
@@ -44,7 +44,7 @@ jobs:
       run: |
         CLIENT_ID=$(aws cognito-idp create-user-pool-client \
           --user-pool-id ${{ env.USER_POOL_ID }} \
-          --client-name "MyAppClient" \
+          --client-name "users-app" \
           --no-generate-secret \
           --explicit-auth-flows "ALLOW_USER_PASSWORD_AUTH" "ALLOW_USER_SRP_AUTH" "ALLOW_REFRESH_TOKEN_AUTH" \
           --query "UserPoolClient.ClientId" \
