@@ -4,7 +4,7 @@ const AWS = require('aws-sdk');
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
 
 // Configuração do Client ID 
-const clientId = '5s4e0chc0ses3nr9i5196604ub'; 
+const clientId = '3fg5kc24gtn5atlq5kuop1pd6v'; 
 
 exports.handler = async (event) => {
     // Extrair os parâmetros da chamada da API
