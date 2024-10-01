@@ -1,18 +1,88 @@
 {
-	"info": {
-		"_postman_id": "af3bee5f-b282-41d0-b232-fcc2e2e5dfc7",
-		"name": "New Collection",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
-		"_exporter_id": "35340887"
-	},
-	"item": [
-		{
-			"name": "get_CPF",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
-		}
-	]
+    "info": {
+        "_postman_id": "af3bee5f-b282-41d0-b232-fcc2e2e5dfc7",
+        "name": "GETS",
+        "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+        "_exporter_id": "35340887"
+    },
+    "item": [
+        {
+            "name": "get_CPF",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "https://uairjfuzak.execute-api.us-east-1.amazonaws.com/dev/users?cpf=xxxxxxx&password=xxxxxxx",
+                    "protocol": "https",
+                    "host": [
+                        "uairjfuzak",
+                        "execute-api",
+                        "us-east-1",
+                        "amazonaws",
+                        "com"
+                    ],
+                    "path": [
+                        "dev",
+                        "users"
+                    ],
+                    "query": [
+                        {
+                            "key": "cpf",
+                            "value": "xxxxxxxx"
+                        },
+                        {
+                            "key": "password",
+                            "value": "xxxxxxx"
+                        }
+                    ]
+                }
+            },
+            "response": [
+                {
+                    "code": 200,
+                    "name": "Successful Response",
+                    "body": "{\"message\":\"Autenticação bem-sucedida\"}",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                {
+                    "code": 400,
+                    "name": "Invalid CPF Response",
+                    "body": "{\"error\":\"CPF inválido\"}",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                {
+                    "code": 401,
+                    "name": "Unauthorized Response",
+                    "body": "{\"error\":\"Senha incorreta ou usuário não autorizado\"}",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                {
+                    "code": 404,
+                    "name": "User Not Found Response",
+                    "body": "{\"error\":\"Usuário não encontrado\"}",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
 }
