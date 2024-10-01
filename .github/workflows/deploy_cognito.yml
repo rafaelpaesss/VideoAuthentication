@@ -51,12 +51,6 @@ jobs:
           --output text)
         echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
 
-    - name: Configurar Atributos Personalizados
-      run: |
-        aws cognito-idp add-custom-attributes \
-          --user-pool-id ${{ env.USER_POOL_ID }} \
-          --custom-attributes '[{"Name": "cpf", "AttributeDataType": "String", "StringAttributeConstraints": {"MinLength": "11", "MaxLength": "11"}}]'
-
     - name: Exibir User Pool ID e App Client ID
       run: |
         echo "User Pool ID: ${{ env.USER_POOL_ID }}"
