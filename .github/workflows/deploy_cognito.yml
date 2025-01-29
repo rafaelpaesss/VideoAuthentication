@@ -3,7 +3,7 @@ name: Deploy Cognito
 on:
   push:
     branches:
-      - main  # Executa o deploy quando há push na branch main
+      - main  # Executa deploy quando há push na branch main
 
 jobs:
   deploy:
