@@ -48,7 +48,7 @@ jobs:
     - name: Criar Função Lambda
       run: |
         aws lambda create-function \
-          --function-name getUserByCpf \
+          --function-name getUser \
           --runtime nodejs20.x \
           --handler index.handler \
           --zip-file fileb://lambda.zip \
@@ -89,7 +89,7 @@ jobs:
     - name: Dar Permissão ao Lambda
       run: |
         aws lambda add-permission \
-          --function-name getUserByCpf \
+          --function-name getUser \
           --statement-id apigateway-access \
           --action lambda:InvokeFunction \
           --principal apigateway.amazonaws.com \
