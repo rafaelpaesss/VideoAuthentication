@@ -67,11 +67,11 @@ jobs:
           --output text)
         echo "INTEGRATION_ID=$INTEGRATION_ID" >> $GITHUB_ENV
 
-    - name: Criar Rota ANY /getUser
+    - name: Criar Rota GET /getUser
       run: |
         aws apigatewayv2 create-route \
           --api-id ${{ env.API_ID }} \
-          --route-key "ANY /getUser" \
+          --route-key "GET /getUser" \
           --target integrations/${{ env.INTEGRATION_ID }}
 
     - name: Criar Deploy da API
