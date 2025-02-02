@@ -2,8 +2,8 @@ const AWS = require('aws-sdk');
 const cognito = new AWS.CognitoIdentityServiceProvider();
 
 const CLIENT_ID = "2kq38icmnl2o8tnp849f04tq57";
-const userPoolId = process.env.USER_POOL_ID || "us-east-1_n8dcY8my5"; // ou o ID correto
-console.log("USER_POOL_ID configurado:", process.env.USER_POOL_ID);
+const userPoolId = process.env.USER_POOL_ID || "us-east-1_n8dcY8my5";
+const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN || "arn:aws:sns:us-east-1:300254322294:RedshiftSNS"; // Substitua pelo ARN correto
 
 exports.handler = async (event) => {
     try {
@@ -26,6 +26,7 @@ exports.handler = async (event) => {
             }
         }
 
+        // Criar usuário no Cognito
         const params = {
             ClientId: CLIENT_ID,
             Username: email,
@@ -33,15 +34,22 @@ exports.handler = async (event) => {
             UserAttributes: [
                 { Name: "email", Value: email },
                 { Name: "custom:cpf", Value: cpf },
-                { Name: "custom:endereco", Value: endereco }
+                { Name: "custom:endereco", Value: String(endereco) }
             ]
         };
 
         await cognito.signUp(params).promise();
 
+        // Publicar no SNS
+        await sns.publish({
+            TopicArn: SNS_TOPIC_ARN,
+            Message: JSON.stringify({ email, cpf, endereco }),
+            Subject: "Novo Cadastro de Usuário"
+        }).promise();
+
         return {
             statusCode: 201,
-            body: JSON.stringify({ message: "Usuário cadastrado com sucesso!" })
+            body: JSON.stringify({ message: "Usuário cadastrado com sucesso e notificado no SNS!" })
         };
     } catch (error) {
         return {
