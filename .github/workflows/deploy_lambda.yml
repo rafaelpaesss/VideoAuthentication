@@ -24,8 +24,11 @@ jobs:
     - name: Verificar AWS CLI
       run: aws --version
 
-    - name: Zip Lambda function
-      run: zip -r lambda.zip index.js node_modules
+    - name: Zip Lambda getUser function
+      run: zip -r getUser.zip index.js node_modules
+
+    - name: Zip Lambda postUser function
+      run: zip -r postUser.zip postUser.js node_modules
 
     - name: Configurar Credenciais AWS
       uses: aws-actions/configure-aws-credentials@v3
@@ -40,39 +43,68 @@ jobs:
         API_ID=$(aws apigatewayv2 create-api \
           --name "apiGatewayLambda" \
           --protocol-type HTTP \
-          --description "API Gateway para Lambda de validação de usuário" \
+          --description "API Gateway para Lambda de validação e cadastro de usuário" \
           --query "ApiId" \
           --output text)
         echo "API_ID=$API_ID" >> $GITHUB_ENV
 
-    - name: Criar Função Lambda
+    - name: Criar Função Lambda getUser
       run: |
         aws lambda create-function \
           --function-name getUser \
           --runtime nodejs20.x \
           --handler index.handler \
-          --zip-file fileb://lambda.zip \
+          --zip-file fileb://getUser.zip \
           --timeout 10 \
           --memory-size 128 \
           --role arn:aws:iam::300254322294:role/LabRole
 
-    - name: Criar Integração Lambda no API Gateway
+    - name: Criar Função Lambda postUser
       run: |
-        INTEGRATION_ID=$(aws apigatewayv2 create-integration \
+        aws lambda create-function \
+          --function-name postUser \
+          --runtime nodejs20.x \
+          --handler postUser.handler \
+          --zip-file fileb://postUser.zip \
+          --timeout 10 \
+          --memory-size 128 \
+          --role arn:aws:iam::300254322294:role/LabRole
+
+    - name: Criar Integração Lambda getUser no API Gateway
+      run: |
+        INTEGRATION_ID_GET=$(aws apigatewayv2 create-integration \
           --api-id ${{ env.API_ID }} \
           --integration-type AWS_PROXY \
           --integration-uri arn:aws:lambda:us-east-1:300254322294:function:getUser \
           --payload-format-version 2.0 \
           --query "IntegrationId" \
           --output text)
-        echo "INTEGRATION_ID=$INTEGRATION_ID" >> $GITHUB_ENV
+        echo "INTEGRATION_ID_GET=$INTEGRATION_ID_GET" >> $GITHUB_ENV
+
+    - name: Criar Integração Lambda postUser no API Gateway
+      run: |
+        INTEGRATION_ID_POST=$(aws apigatewayv2 create-integration \
+          --api-id ${{ env.API_ID }} \
+          --integration-type AWS_PROXY \
+          --integration-uri arn:aws:lambda:us-east-1:300254322294:function:postUser \
+          --payload-format-version 2.0 \
+          --query "IntegrationId" \
+          --output text)
+        echo "INTEGRATION_ID_POST=$INTEGRATION_ID_POST" >> $GITHUB_ENV
 
     - name: Criar Rota GET /getUser
       run: |
         aws apigatewayv2 create-route \
           --api-id ${{ env.API_ID }} \
           --route-key "GET /getUser" \
-          --target integrations/${{ env.INTEGRATION_ID }}
+          --target integrations/${{ env.INTEGRATION_ID_GET }}
+
+    - name: Criar Rota POST /postUser
+      run: |
+        aws apigatewayv2 create-route \
+          --api-id ${{ env.API_ID }} \
+          --route-key "POST /postUser" \
+          --target integrations/${{ env.INTEGRATION_ID_POST }}
 
     - name: Criar Deploy da API
       run: |
@@ -86,11 +118,20 @@ jobs:
           --stage-name "dev" \
           --deployment-id $DEPLOYMENT_ID
 
-    - name: Dar Permissão ao Lambda
+    - name: Dar Permissão ao Lambda getUser
       run: |
         aws lambda add-permission \
           --function-name getUser \
-          --statement-id apigateway-access \
+          --statement-id apigateway-access-get \
           --action lambda:InvokeFunction \
           --principal apigateway.amazonaws.com \
           --source-arn arn:aws:execute-api:us-east-1:300254322294:${{ env.API_ID }}/*/*/getUser
+
+    - name: Dar Permissão ao Lambda postUser
+      run: |
+        aws lambda add-permission \
+          --function-name postUser \
+          --statement-id apigateway-access-post \
+          --action lambda:InvokeFunction \
+          --principal apigateway.amazonaws.com \
+          --source-arn arn:aws:execute-api:us-east-1:300254322294:${{ env.API_ID }}/*/*/postUser
