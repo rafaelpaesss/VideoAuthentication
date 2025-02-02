@@ -4,7 +4,7 @@ const sns = new AWS.SNS(); // Adicionando a inicialização do SNS
 
 const CLIENT_ID = "2kq38icmnl2o8tnp849f04tq57";
 const userPoolId = process.env.USER_POOL_ID || "us-east-1_n8dcY8my5";
-const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN || "arn:aws:sns:us-east-1:300254322294:RedshiftSNS"; // Substitua pelo ARN correto
+const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN || "arn:aws:sns:us-east-1:300254322294:Teste";
 
 exports.handler = async (event) => {
     try {
