@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const cognito = new AWS.CognitoIdentityServiceProvider();
 
-const CLIENT_ID = "5g89eehhulocgncdveqb120la3";
+const CLIENT_ID = "2kq38icmnl2o8tnp849f04tq57";
 const userPoolId = process.env.USER_POOL_ID || "us-east-1_n8dcY8my5"; // ou o ID correto
 console.log("USER_POOL_ID configurado:", process.env.USER_POOL_ID);
 
