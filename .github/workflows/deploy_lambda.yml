@@ -69,13 +69,17 @@ jobs:
           --timeout 10 \
           --memory-size 128 \
           --role arn:aws:iam::300254322294:role/LabRole
-          
+
+    - name: Aguardar criação da função Lambda postUser
+      run: |
+        echo "Aguardando a criação da função Lambda postUser..."
+        sleep 30 # Aguardar 30 segundos para garantir que a função Lambda esteja pronta
+
     - name: Configurar Variáveis de Ambiente da Lambda postUser
       run: |
         aws lambda update-function-configuration \
           --function-name postUser \
           --environment "Variables={USER_POOL_ID='us-east-1_n8dcY8my5'}"
-
 
     - name: Criar Integração Lambda getUser no API Gateway
       run: |
