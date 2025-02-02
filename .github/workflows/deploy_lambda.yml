@@ -3,7 +3,7 @@ name: Deploy Lambda
 on:
   push:
     branches:
-      - main  # Executa o deploy quando há push na branch main
+      - main  # Executa o deploy quando push na branch main
 
 jobs:
   deploy:
