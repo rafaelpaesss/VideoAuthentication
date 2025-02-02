@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const cognito = new AWS.CognitoIdentityServiceProvider();
 
 const CLIENT_ID = "5g89eehhulocgncdveqb120la3";
+const userPoolId = process.env.USER_POOL_ID || "us-east-1_n8dcY8my5"; // ou o ID correto
 
 exports.handler = async (event) => {
     try {
@@ -11,7 +12,7 @@ exports.handler = async (event) => {
         // Verificar se o usuário já existe
         try {
             await cognito.adminGetUser({
-                UserPoolId: process.env.USER_POOL_ID,
+                UserPoolId: userPoolId,
                 Username: email
             }).promise();
             return {
