@@ -25,7 +25,7 @@ jobs:
       run: aws --version
 
     - name: Zip Lambda getUser function
-      run: zip -r getUser.zip index.js node_modules
+      run: zip -r getUser.zip getUser.js node_modules
 
     - name: Zip Lambda postUser function
       run: zip -r postUser.zip postUser.js node_modules
