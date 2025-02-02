@@ -69,6 +69,11 @@ jobs:
           --timeout 10 \
           --memory-size 128 \
           --role arn:aws:iam::300254322294:role/LabRole
+    
+    - name: Configurar Variáveis de Ambiente da Lambda postUser
+      run: |
+        aws lambda update-function-configuration \
+          --function-name postUser \
           --environment Variables="us-east-1_n8dcY8my5"
 
     - name: Criar Integração Lambda getUser no API Gateway
