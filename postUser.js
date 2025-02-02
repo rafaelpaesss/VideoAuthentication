@@ -48,9 +48,16 @@ exports.handler = async (event) => {
             Subject: "Novo Cadastro de Usuário"
         }).promise();
 
+        // Criar uma assinatura no SNS para o e-mail cadastrado
+        await sns.subscribe({
+            TopicArn: SNS_TOPIC_ARN,
+            Protocol: "email",
+            Endpoint: email
+        }).promise();
+
         return {
             statusCode: 201,
-            body: JSON.stringify({ message: "Usuário cadastrado com sucesso e notificado no SNS!" })
+            body: JSON.stringify({ message: "Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!" })
         };
     } catch (error) {
         return {
