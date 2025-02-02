@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const cognito = new AWS.CognitoIdentityServiceProvider();
-const sns = new AWS.SNS(); // Adicionando a inicialização do SNS
+const sns = new AWS.SNS();
 
 const CLIENT_ID = "2kq38icmnl2o8tnp849f04tq57";
 const userPoolId = process.env.USER_POOL_ID || "us-east-1_n8dcY8my5";
@@ -11,11 +11,11 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body);
         const { userName, email, password, cpf, endereco } = body;
 
-        // Verificar se o usuário já existe
+        // Verificar se o usuário já existe pelo userName
         try {
             await cognito.adminGetUser({
                 UserPoolId: userPoolId,
-                Username: email
+                Username: userName  // Agora verifica pelo userName, e não pelo email
             }).promise();
             return {
                 statusCode: 400,
@@ -30,7 +30,7 @@ exports.handler = async (event) => {
         // Criar usuário no Cognito
         const params = {
             ClientId: CLIENT_ID,
-            Username: email,
+            Username: userName,  // Agora cadastra o userName no Cognito
             Password: password,
             UserAttributes: [
                 { Name: "email", Value: email },
@@ -44,7 +44,7 @@ exports.handler = async (event) => {
         // Publicar no SNS
         await sns.publish({
             TopicArn: SNS_TOPIC_ARN,
-            Message: JSON.stringify({ email, cpf, endereco }),
+            Message: JSON.stringify({ userName, email, cpf, endereco }),
             Subject: "Novo Cadastro de Usuário"
         }).promise();
 
