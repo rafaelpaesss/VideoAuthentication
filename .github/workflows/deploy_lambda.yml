@@ -53,7 +53,7 @@ jobs:
         aws lambda create-function \
           --function-name getUser \
           --runtime nodejs20.x \
-          --handler index.handler \
+          --handler getUser.handler \
           --zip-file fileb://getUser.zip \
           --timeout 10 \
           --memory-size 128 \
