@@ -1,17 +1,17 @@
 const AWS = require('aws-sdk');
 
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
-const clientId = '2kq38icmnl2o8tnp849f04tq57'; //client id do cognito
+const clientId = '2kq38icmnl2o8tnp849f04tq57'; // Client ID do Cognito
 
 exports.handler = async (event) => {
     console.log("Evento recebido:", JSON.stringify(event));
 
-    const cpf = event.queryStringParameters?.cpf;
+    const userName = event.queryStringParameters?.userName;
     const password = event.queryStringParameters?.password;
 
-    if (!cpf || cpf.length !== 11) {
-        console.error("Erro: CPF inválido");
-        return { statusCode: 400, body: JSON.stringify({ error: "CPF inválido" }) };
+    if (!userName) {
+        console.error("Erro: Nome de usuário não fornecido");
+        return { statusCode: 400, body: JSON.stringify({ error: "Nome de usuário não fornecido" }) };
     }
 
     if (!password) {
@@ -23,7 +23,7 @@ exports.handler = async (event) => {
         const authParams = {
             AuthFlow: 'USER_PASSWORD_AUTH',
             ClientId: clientId,
-            AuthParameters: { USERNAME: cpf, PASSWORD: password }
+            AuthParameters: { USERNAME: userName, PASSWORD: password }
         };
 
         console.log("Iniciando autenticação...");
@@ -31,16 +31,16 @@ exports.handler = async (event) => {
 
         console.log("Resposta de autenticação:", JSON.stringify(authResponse));
 
-        // se o usuário precisar alterar a senha (quando não confirmada no cognito)
+        // Caso o usuário precise alterar a senha (quando não confirmada no Cognito)
         if (authResponse.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
-            const newPassword = password; 
+            const newPassword = password;
 
             const challengeParams = {
                 ChallengeName: 'NEW_PASSWORD_REQUIRED',
                 ClientId: clientId,
                 Session: authResponse.Session,
                 ChallengeResponses: {
-                    USERNAME: cpf,
+                    USERNAME: userName,
                     NEW_PASSWORD: newPassword
                 }
             };
@@ -52,19 +52,21 @@ exports.handler = async (event) => {
 
             const accessToken = finalAuthResponse.AuthenticationResult.AccessToken;
 
-            // buscando os dados do user no cognito
+            // Buscar dados do usuário no Cognito
             const userData = await cognito.getUser({ AccessToken: accessToken }).promise();
             console.log("Dados do usuário:", JSON.stringify(userData));
 
             const email = userData.UserAttributes.find(attr => attr.Name === 'email')?.Value || null;
             const endereco = userData.UserAttributes.find(attr => attr.Name === 'custom:endereco')?.Value || null;
+            const cpf = userData.UserAttributes.find(attr => attr.Name === 'custom:cpf')?.Value || null;
 
             return {
                 statusCode: 200,
                 body: JSON.stringify({
                     message: "Autenticação bem-sucedida",
                     email,
-                    endereco
+                    endereco,
+                    cpf
                 })
             };
         }
@@ -78,13 +80,15 @@ exports.handler = async (event) => {
 
             const email = userData.UserAttributes.find(attr => attr.Name === 'email')?.Value || null;
             const endereco = userData.UserAttributes.find(attr => attr.Name === 'custom:endereco')?.Value || null;
+            const cpf = userData.UserAttributes.find(attr => attr.Name === 'custom:cpf')?.Value || null;
 
             return {
                 statusCode: 200,
                 body: JSON.stringify({
                     message: "Autenticação bem-sucedida",
                     email,
-                    endereco
+                    endereco,
+                    cpf
                 })
             };
         }
@@ -94,7 +98,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({ error: "Falha na autenticação" })
         };
 
-    } catch (error) { // tratamento de erros em caso de erro ao verificar o cognito
+    } catch (error) {
         console.error("Erro ao autenticar usuário:", error);
 
         if (error.code === 'NotAuthorizedException') {
