@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
-const clientId = '5g89eehhulocgncdveqb120la3'; //client id do cognito
+const clientId = '2kq38icmnl2o8tnp849f04tq57'; //client id do cognito
 
 exports.handler = async (event) => {
     console.log("Evento recebido:", JSON.stringify(event));
