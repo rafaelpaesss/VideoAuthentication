@@ -79,7 +79,7 @@ jobs:
       run: |
         aws lambda update-function-configuration \
           --function-name postUser \
-          --environment "Variables={USER_POOL_ID='us-east-1_n8dcY8my5'}"
+          --environment "Variables={USER_POOL_ID='us-east-1_yTMo8tr6x'}"
 
     - name: Criar Integração Lambda getUser no API Gateway
       run: |
