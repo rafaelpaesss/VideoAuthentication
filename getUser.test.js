@@ -3,14 +3,16 @@ const { handler } = require("./getUser.js");
 
 jest.mock("@aws-sdk/client-cognito-identity-provider", () => {
     const actual = jest.requireActual("@aws-sdk/client-cognito-identity-provider");
-    
+
     return {
         ...actual,
         CognitoIdentityProviderClient: jest.fn().mockImplementation(() => ({
             send: jest.fn().mockImplementation((command) => {
+                // Mock for InitiateAuthCommand
                 if (command instanceof actual.InitiateAuthCommand) {
                     return Promise.resolve({ AuthenticationResult: { AccessToken: "fake-token" } });
                 }
+                // Return a rejected promise for other commands
                 return Promise.reject(new Error("Unknown command"));
             }),
         })),
@@ -40,7 +42,8 @@ describe("getUser handler", () => {
     });
 
     it("should return 500 on authentication failure", async () => {
-        jest.spyOn(CognitoIdentityProviderClient.prototype, "send").mockRejectedValueOnce(new Error("Auth failed"));
+        // Mock the failure case for send
+        CognitoIdentityProviderClient.prototype.send.mockRejectedValueOnce(new Error("Auth failed"));
 
         const event = { body: JSON.stringify({ userName: "testUser", password: "wrongPass" }) };
         const response = await handler(event);
