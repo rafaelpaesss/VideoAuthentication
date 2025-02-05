@@ -19,7 +19,10 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Test and coverage
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests and coverage
         run: yarn test:cov
 
       - name: SonarQube Cloud Scan
