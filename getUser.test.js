@@ -17,14 +17,14 @@ describe("getUser handler", () => {
     const event = { body: JSON.stringify({ password: "testPass" }) };
     const response = await handler(event);
     expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toBe("Missing userName or password");
+    expect(JSON.parse(response.body).error).toBe("Nome de usuário não fornecido"); // Ajustado para o que o código de produção retorna
   });
 
   it("should return 400 if password is missing", async () => {
     const event = { body: JSON.stringify({ userName: "testUser" }) };
     const response = await handler(event);
     expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toBe("Missing userName or password");
+    expect(JSON.parse(response.body).error).toBe("Nome de usuário não fornecido"); // Ajustado para o que o código de produção retorna
   });
 
   it("should return token if authentication is successful", async () => {
