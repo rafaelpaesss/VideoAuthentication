@@ -1,5 +1,5 @@
-import { CognitoIdentityProviderClient, InitiateAuthCommand } from "@aws-sdk/client-cognito-identity-provider";
-import { handler } from "./getUser.js";
+const { CognitoIdentityProviderClient, InitiateAuthCommand } = require("@aws-sdk/client-cognito-identity-provider");
+const { handler } = require("./getUser.js");
 
 jest.mock("@aws-sdk/client-cognito-identity-provider", () => {
     const actual = jest.requireActual("@aws-sdk/client-cognito-identity-provider");
