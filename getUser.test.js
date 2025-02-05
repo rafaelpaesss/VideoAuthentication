@@ -7,12 +7,7 @@ jest.mock("@aws-sdk/client-cognito-identity-provider", () => {
   return {
     ...actual,
     CognitoIdentityProviderClient: jest.fn().mockImplementation(() => ({
-      send: jest.fn().mockImplementation((command) => {
-        if (command instanceof actual.InitiateAuthCommand) {
-          return Promise.resolve({ AuthenticationResult: { AccessToken: "fake-token" } });
-        }
-        return Promise.reject(new Error("Unknown command"));
-      }),
+      send: jest.fn(),
     })),
   };
 });
@@ -33,6 +28,11 @@ describe("getUser handler", () => {
   });
 
   it("should return token if authentication is successful", async () => {
+    // Simula uma resposta de sucesso do Cognito
+    CognitoIdentityProviderClient.prototype.send.mockResolvedValueOnce({
+      AuthenticationResult: { AccessToken: "fake-token" },
+    });
+
     const event = { body: JSON.stringify({ userName: "testUser", password: "testPass" }) };
     const response = await handler(event);
     expect(response.statusCode).toBe(200);
@@ -40,9 +40,8 @@ describe("getUser handler", () => {
   });
 
   it("should return 500 on authentication failure", async () => {
-    // Certifique-se de que o método send está sendo mockado corretamente
-    const sendMock = CognitoIdentityProviderClient.prototype.send;
-    sendMock.mockRejectedValueOnce(new Error("Auth failed"));
+    // Simula uma falha de autenticação
+    CognitoIdentityProviderClient.prototype.send.mockRejectedValueOnce(new Error("Auth failed"));
 
     const event = { body: JSON.stringify({ userName: "testUser", password: "wrongPass" }) };
     const response = await handler(event);
