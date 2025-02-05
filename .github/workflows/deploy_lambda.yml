@@ -1,50 +1,173 @@
-const { CognitoIdentityProviderClient, InitiateAuthCommand } = require("@aws-sdk/client-cognito-identity-provider");
-const { handler } = require("./getUser.js");
+name: Deploy Lambda
 
-jest.mock("@aws-sdk/client-cognito-identity-provider", () => {
-    const actual = jest.requireActual("@aws-sdk/client-cognito-identity-provider");
-    
-    return {
-        ...actual,
-        CognitoIdentityProviderClient: jest.fn().mockImplementation(() => ({
-            send: jest.fn().mockImplementation((command) => {
-                if (command instanceof actual.InitiateAuthCommand) {
-                    return Promise.resolve({ AuthenticationResult: { AccessToken: "fake-token" } });
-                }
-                return Promise.reject(new Error("Unknown command"));
-            }),
-        })),
-    };
-});
+on:
+  push:
+    branches:
+      - main  # Executa o deploy quando push na branch main
 
-describe("getUser handler", () => {
-    it("should return 400 if userName is missing", async () => {
-        const event = { body: JSON.stringify({ password: "testPass" }) };
-        const response = await handler(event);
-        expect(response.statusCode).toBe(400);
-        expect(JSON.parse(response.body).message).toBe("Missing userName or password");
-    });
+jobs:
+  sonarcloud:
+    name: SonarQube Cloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    it("should return 400 if password is missing", async () => {
-        const event = { body: JSON.stringify({ userName: "testUser" }) };
-        const response = await handler(event);
-        expect(response.statusCode).toBe(400);
-        expect(JSON.parse(response.body).message).toBe("Missing userName or password");
-    });
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
 
-    it("should return token if authentication is successful", async () => {
-        const event = { body: JSON.stringify({ userName: "testUser", password: "testPass" }) };
-        const response = await handler(event);
-        expect(response.statusCode).toBe(200);
-        expect(JSON.parse(response.body).token).toBe("fake-token");
-    });
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-    it("should return 500 on authentication failure", async () => {
-        jest.spyOn(CognitoIdentityProviderClient.prototype, "send").mockRejectedValueOnce(new Error("Auth failed"));
+      - name: Run tests and coverage
+        run: yarn test:cov
 
-        const event = { body: JSON.stringify({ userName: "testUser", password: "wrongPass" }) };
-        const response = await handler(event);
-        expect(response.statusCode).toBe(500);
-        expect(JSON.parse(response.body).message).toBe("Auth failed");
-    });
-});
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checando Repo
+      uses: actions/checkout@v3
+
+    - name: Set up do Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        
+    - name: NPM Install
+      run: npm install 
+
+    - name: Verificar AWS CLI
+      run: aws --version
+
+    - name: Zip Lambda getUser function
+      run: zip -r getUser.zip getUser.js node_modules
+
+    - name: Zip Lambda postUser function
+      run: zip -r postUser.zip postUser.js node_modules
+
+    - name: Configurar Credenciais AWS
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: us-east-1
+
+    - name: Criar API Gateway
+      run: |
+        API_ID=$(aws apigatewayv2 create-api \
+          --name "apiGatewayLambda" \
+          --protocol-type HTTP \
+          --description "API Gateway para Lambda de validação e cadastro de usuário" \
+          --query "ApiId" \
+          --output text)
+        echo "API_ID=$API_ID" >> $GITHUB_ENV
+
+    - name: Criar Função Lambda getUser
+      run: |
+        aws lambda create-function \
+          --function-name getUser \
+          --runtime nodejs20.x \
+          --handler getUser.handler \
+          --zip-file fileb://getUser.zip \
+          --timeout 10 \
+          --memory-size 128 \
+          --role arn:aws:iam::300254322294:role/LabRole
+
+    - name: Criar Função Lambda postUser
+      run: |
+        aws lambda create-function \
+          --function-name postUser \
+          --runtime nodejs20.x \
+          --handler postUser.handler \
+          --zip-file fileb://postUser.zip \
+          --timeout 10 \
+          --memory-size 128 \
+          --role arn:aws:iam::300254322294:role/LabRole
+
+    - name: Aguardar criação da função Lambda postUser
+      run: |
+        echo "Aguardando a criação da função Lambda postUser..."
+        sleep 30 # Aguardar 30 segundos para garantir que a função Lambda esteja pronta
+
+    - name: Configurar Variáveis de Ambiente da Lambda postUser
+      run: |
+        aws lambda update-function-configuration \
+          --function-name postUser \
+          --environment "Variables={USER_POOL_ID='us-east-1_yTMo8tr6x'}"
+
+    - name: Criar Integração Lambda getUser no API Gateway
+      run: |
+        INTEGRATION_ID_GET=$(aws apigatewayv2 create-integration \
+          --api-id ${{ env.API_ID }} \
+          --integration-type AWS_PROXY \
+          --integration-uri arn:aws:lambda:us-east-1:300254322294:function:getUser \
+          --payload-format-version 2.0 \
+          --query "IntegrationId" \
+          --output text)
+        echo "INTEGRATION_ID_GET=$INTEGRATION_ID_GET" >> $GITHUB_ENV
+
+    - name: Criar Integração Lambda postUser no API Gateway
+      run: |
+        INTEGRATION_ID_POST=$(aws apigatewayv2 create-integration \
+          --api-id ${{ env.API_ID }} \
+          --integration-type AWS_PROXY \
+          --integration-uri arn:aws:lambda:us-east-1:300254322294:function:postUser \
+          --payload-format-version 2.0 \
+          --query "IntegrationId" \
+          --output text)
+        echo "INTEGRATION_ID_POST=$INTEGRATION_ID_POST" >> $GITHUB_ENV
+
+    - name: Criar Rota GET /getUser
+      run: |
+        aws apigatewayv2 create-route \
+          --api-id ${{ env.API_ID }} \
+          --route-key "GET /getUser" \
+          --target integrations/${{ env.INTEGRATION_ID_GET }}
+
+    - name: Criar Rota POST /postUser
+      run: |
+        aws apigatewayv2 create-route \
+          --api-id ${{ env.API_ID }} \
+          --route-key "POST /postUser" \
+          --target integrations/${{ env.INTEGRATION_ID_POST }}
+
+    - name: Criar Deploy da API
+      run: |
+        DEPLOYMENT_ID=$(aws apigatewayv2 create-deployment \
+          --api-id ${{ env.API_ID }} \
+          --query "DeploymentId" \
+          --output text)
+        echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
+        aws apigatewayv2 create-stage \
+          --api-id ${{ env.API_ID }} \
+          --stage-name "dev" \
+          --deployment-id $DEPLOYMENT_ID
+
+    - name: Dar Permissão ao Lambda getUser
+      run: |
+        aws lambda add-permission \
+          --function-name getUser \
+          --statement-id apigateway-access-get \
+          --action lambda:InvokeFunction \
+          --principal apigateway.amazonaws.com \
+          --source-arn arn:aws:execute-api:us-east-1:300254322294:${{ env.API_ID }}/*/*/getUser
+
+    - name: Dar Permissão ao Lambda postUser
+      run: |
+        aws lambda add-permission \
+          --function-name postUser \
+          --statement-id apigateway-access-post \
+          --action lambda:InvokeFunction \
+          --principal apigateway.amazonaws.com \
+          --source-arn arn:aws:execute-api:us-east-1:300254322294:${{ env.API_ID }}/*/*/postUser
