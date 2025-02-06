@@ -1,5 +1,5 @@
-const { handler } = require('./getUser'); // Corrija o caminho do arquivo se necessário
-const { CognitoIdentityProviderClient } = require('@aws-sdk/client-cognito-identity-provider');
+const { handler } = require("./getUser");
+const { CognitoIdentityProviderClient, AdminInitiateAuthCommand } = require("@aws-sdk/client-cognito-identity-provider");
 
 jest.mock('@aws-sdk/client-cognito-identity-provider', () => {
   return {
@@ -8,6 +8,7 @@ jest.mock('@aws-sdk/client-cognito-identity-provider', () => {
 });
 
 describe("getUser handler", () => {
+
   it("should return 400 if userName is missing", async () => {
     const event = { body: JSON.stringify({ password: "testPass" }) };
     const response = await handler(event);
