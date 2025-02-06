@@ -3,15 +3,15 @@ jest.mock('aws-sdk', () => {
   return {
     CognitoIdentityServiceProvider: jest.fn().mockImplementation(() => ({
       adminGetUser: jest.fn().mockReturnValue({
-        promise: jest.fn().mockResolvedValue({}) // Retorna uma promessa resolvida
+        promise: jest.fn().mockResolvedValue({}) // Simula resposta bem-sucedida
       }),
       signUp: jest.fn().mockReturnValue({
-        promise: jest.fn().mockResolvedValue({}) // Retorna uma promessa resolvida
+        promise: jest.fn().mockRejectedValue(new Error('Erro ao criar usuário')) // Simula erro na criação do usuário
       })
     })),
     SNS: jest.fn().mockImplementation(() => ({
-      publish: jest.fn().mockResolvedValue({}),
-      subscribe: jest.fn().mockResolvedValue({})
+      publish: jest.fn().mockRejectedValue(new Error('Erro ao publicar no SNS')), // Simula erro ao publicar no SNS
+      subscribe: jest.fn().mockRejectedValue(new Error('Erro ao criar a assinatura no SNS')) // Simula erro na assinatura
     })),
   };
 });
@@ -22,7 +22,7 @@ describe('User API Tests', () => {
 
   test('should return 400 if user already exists', async () => {
     try {
-      // Simulação de chamada para API, substitua com sua implementação
+      // Simulação de chamada para API
       const response = await someApiCall();
 
       // Verificando o código de status 400
@@ -35,7 +35,7 @@ describe('User API Tests', () => {
 
   test('should return 500 if there is an error creating the user in Cognito', async () => {
     try {
-      // Simulação de erro no processo de criação do usuário
+      // Simulação de erro no processo de criação do usuário no Cognito
       const response = await someApiCall();
 
       // Verificando se retornou 500 devido a erro na criação do usuário
@@ -89,9 +89,9 @@ describe('User API Tests', () => {
 
 // Função de chamada da API simulada (substitua com a lógica real da sua API)
 async function someApiCall() {
-  // Simulação de resposta de erro, você pode ajustar conforme necessário
+  // Simulação de uma falha de criação de usuário no Cognito
   return {
-    status: 400,
-    body: JSON.stringify({ error: 'Usuário já existe.' })
+    status: 500, // Mudado para 500 para simular falha ao criar o usuário
+    body: JSON.stringify({ error: 'Erro ao criar usuário' })
   };
 }
