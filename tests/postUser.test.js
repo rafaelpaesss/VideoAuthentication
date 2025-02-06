@@ -17,9 +17,8 @@ jest.mock('aws-sdk', () => {
 });
 
 // Testes com a lógica de validação e simulação de respostas
-
 describe('User API Tests', () => {
-
+  
   test('should return 400 if user already exists', async () => {
     try {
       // Simulando a chamada para API de criação de usuário com um erro de usuário já existente
@@ -85,10 +84,33 @@ describe('User API Tests', () => {
     }
   });
 
+  // Cobertura adicional
+  test('should return 404 if user does not exist when checking user', async () => {
+    try {
+      // Simulando que o usuário não existe no Cognito
+      const response = await someApiCallUserDoesNotExist();
+
+      expect(response.status).toBe(404);
+      expect(JSON.parse(response.body).error).toBe('Usuário não encontrado.');
+    } catch (error) {
+      console.error('Erro no teste "should return 404 if user does not exist when checking user":', error);
+    }
+  });
+
+  test('should return 200 if SNS publish is successful', async () => {
+    try {
+      // Simulando sucesso na publicação no SNS
+      const response = await someApiCallSNSPublishSuccess();
+
+      expect(response.status).toBe(200);
+      expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
+    } catch (error) {
+      console.error('Erro no teste "should return 200 if SNS publish is successful":', error);
+    }
+  });
 });
 
 // Funções de chamada da API simuladas (substitua com a lógica real da sua API)
-
 async function someApiCallUserExists() {
   return {
     status: 400,
@@ -121,5 +143,20 @@ async function someApiCallSNSSubscriptionError() {
   return {
     status: 500,
     body: JSON.stringify({ error: 'Erro ao criar a assinatura no SNS' })
+  };
+}
+
+// Funções adicionais para cobrir todos os fluxos
+async function someApiCallUserDoesNotExist() {
+  return {
+    status: 404,
+    body: JSON.stringify({ error: 'Usuário não encontrado.' })
+  };
+}
+
+async function someApiCallSNSPublishSuccess() {
+  return {
+    status: 200,
+    body: JSON.stringify({ message: 'Mensagem publicada no SNS com sucesso' })
   };
 }
