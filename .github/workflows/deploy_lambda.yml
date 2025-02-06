@@ -53,10 +53,10 @@ jobs:
       run: aws --version
 
     - name: Zip Lambda getUser function
-      run: zip -r getUser.zip getUser.js node_modules
+      run: zip -r getUser.zip src/getUser.js node_modules
 
     - name: Zip Lambda postUser function
-      run: zip -r postUser.zip postUser.js node_modules
+      run: zip -r postUser.zip src/postUser.js node_modules
 
     - name: Configurar Credenciais AWS
       uses: aws-actions/configure-aws-credentials@v3
