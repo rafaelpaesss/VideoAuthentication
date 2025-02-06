@@ -1,4 +1,4 @@
-import AWS from 'aws-sdk'; // Importando o SDK da AWS
+const AWS = require('aws-sdk');
 
 // Mock da AWS SDK
 jest.mock('aws-sdk', () => {
