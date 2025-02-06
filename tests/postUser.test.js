@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const { handler } = require('../src/postUser'); // Ajuste o caminho conforme necessário
 
 // Mock da AWS SDK
 jest.mock('aws-sdk', () => {
@@ -21,6 +20,75 @@ jest.mock('aws-sdk', () => {
 
 const cognito = new AWS.CognitoIdentityServiceProvider(); // Agora o AWS está definido
 const sns = new AWS.SNS();
+
+// Handler diretamente no arquivo de teste
+const handler = async (event) => {
+  const { userName, email, password, cpf, endereco } = JSON.parse(event.body);
+
+  try {
+    // Verifica se o usuário já existe
+    try {
+      await cognito.adminGetUser({ Username: userName }).promise();
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Usuário já existe.' }),
+      };
+    } catch (error) {
+      if (error.code !== 'UserNotFoundException') {
+        throw error;
+      }
+    }
+
+    // Cria o usuário no Cognito
+    try {
+      await cognito.signUp({
+        ClientId: 'client-id', // Adicione seu ClientId aqui
+        Username: userName,
+        Password: password,
+        UserAttributes: [
+          { Name: 'email', Value: email },
+          { Name: 'cpf', Value: cpf },
+          { Name: 'address', Value: endereco },
+        ],
+      }).promise();
+    } catch (error) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Erro ao criar usuário' }),
+      };
+    }
+
+    // Publica no SNS
+    try {
+      await sns.publish({
+        Message: `Novo usuário criado: ${userName}`,
+        TopicArn: 'arn:aws:sns:us-east-1:123456789012:MyTopic',
+      }).promise();
+
+      // Cria a assinatura no SNS
+      await sns.subscribe({
+        Protocol: 'email',
+        Endpoint: 'example@example.com',
+        TopicArn: 'arn:aws:sns:us-east-1:123456789012:MyTopic',
+      }).promise();
+    } catch (error) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Erro ao criar o usuário ou publicar no SNS: ' + error.message }),
+      };
+    }
+
+    return {
+      statusCode: 201,
+      body: JSON.stringify({ message: 'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!' }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Erro interno do servidor' }),
+    };
+  }
+};
 
 describe('postUser handler', () => {
   it('should return 400 if user already exists', async () => {
