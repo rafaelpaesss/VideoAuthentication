@@ -49,7 +49,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(400);
       expect(JSON.parse(response.body).error).toBe('Usuário já existe.');
     } catch (error) {
-      console.error('Erro no teste:', error);
+      console.error('Erro no teste "should return 400 if user already exists":', error);
     }
   });
 
@@ -72,7 +72,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(500);
       expect(JSON.parse(response.body).error).toBe('Erro ao criar usuário');
     } catch (error) {
-      console.error('Erro no teste:', error);
+      console.error('Erro no teste "should return 500 if there is an error creating the user in Cognito":', error);
     }
   });
 
@@ -99,7 +99,7 @@ describe('postUser handler', () => {
         'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!'
       );
     } catch (error) {
-      console.error('Erro no teste:', error);
+      console.error('Erro no teste "should return 201 and create a user successfully":', error);
     }
   });
 
@@ -123,7 +123,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(500);
       expect(JSON.parse(response.body).error).toBe('Erro ao publicar no SNS');
     } catch (error) {
-      console.error('Erro no teste:', error);
+      console.error('Erro no teste "should return 500 if SNS publishing fails":', error);
     }
   });
 
@@ -148,7 +148,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(500);
       expect(JSON.parse(response.body).error).toBe('Erro ao criar a assinatura no SNS');
     } catch (error) {
-      console.error('Erro no teste:', error);
+      console.error('Erro no teste "should return 500 if SNS subscription fails":', error);
     }
   });
 });
