@@ -10,7 +10,7 @@ jest.mock('aws-sdk', () => {
       })
     })),
     SNS: jest.fn().mockImplementation(() => ({
-      publish: jest.fn().mockRejectedValue(new Error('Erro ao publicar no SNS')), // Simula erro ao publicar no SNS
+      publish: jest.fn().mockResolvedValue({ MessageId: '12345' }), // Simula sucesso na publicação
       subscribe: jest.fn().mockRejectedValue(new Error('Erro ao criar a assinatura no SNS')) // Simula erro na assinatura
     })),
   };
@@ -20,97 +20,60 @@ jest.mock('aws-sdk', () => {
 describe('User API Tests', () => {
 
   test('should return 400 if user already exists', async () => {
-    try {
-      const response = await someApiCallUserExists();
-      expect(response.status).toBe(400);
-      expect(JSON.parse(response.body).error).toBe('Usuário já existe.');
-    } catch (error) {
-      console.error('Erro no teste "should return 400 if user already exists":', error);
-    }
+    const response = await someApiCallUserExists();
+    expect(response.status).toBe(400);
+    expect(JSON.parse(response.body).error).toBe('Usuário já existe.');
   });
 
   test('should return 500 if there is an error creating the user in Cognito', async () => {
-    try {
-      const response = await someApiCallCognitoError();
-      expect(response.status).toBe(500);
-      expect(JSON.parse(response.body).error).toBe('Erro ao criar usuário');
-    } catch (error) {
-      console.error('Erro no teste "should return 500 if there is an error creating the user in Cognito":', error);
-    }
+    const response = await someApiCallCognitoError();
+    expect(response.status).toBe(500);
+    expect(JSON.parse(response.body).error).toBe('Erro ao criar usuário');
   });
 
   test('should return 201 and create a user successfully', async () => {
-    try {
-      const response = await someApiCallSuccess();
-      expect(response.status).toBe(201);
-      expect(JSON.parse(response.body).message).toBe('Usuário criado com sucesso');
-    } catch (error) {
-      console.error('Erro no teste "should return 201 and create a user successfully":', error);
-    }
+    const response = await someApiCallSuccess();
+    expect(response.status).toBe(201);
+    expect(JSON.parse(response.body).message).toBe('Usuário criado com sucesso');
   });
 
   test('should return 500 if SNS publishing fails', async () => {
-    try {
-      const response = await someApiCallSNSPublishError();
-      expect(response.status).toBe(500);
-      expect(JSON.parse(response.body).error).toBe('Erro ao publicar no SNS');
-    } catch (error) {
-      console.error('Erro no teste "should return 500 if SNS publishing fails":', error);
-    }
+    const response = await someApiCallSNSPublishError();
+    expect(response.status).toBe(500);
+    expect(JSON.parse(response.body).error).toBe('Erro ao publicar no SNS');
   });
 
   test('should return 500 if SNS subscription fails', async () => {
-    try {
-      const response = await someApiCallSNSSubscriptionError();
-      expect(response.status).toBe(500);
-      expect(JSON.parse(response.body).error).toBe('Erro ao criar a assinatura no SNS');
-    } catch (error) {
-      console.error('Erro no teste "should return 500 if SNS subscription fails":', error);
-    }
+    const response = await someApiCallSNSSubscriptionError();
+    expect(response.status).toBe(500);
+    expect(JSON.parse(response.body).error).toBe('Erro ao criar a assinatura no SNS');
   });
 
   // Cobertura adicional
   test('should return 404 if user does not exist when checking user', async () => {
-    try {
-      const response = await someApiCallUserDoesNotExist();
-      expect(response.status).toBe(404);
-      expect(JSON.parse(response.body).error).toBe('Usuário não encontrado.');
-    } catch (error) {
-      console.error('Erro no teste "should return 404 if user does not exist when checking user":', error);
-    }
+    const response = await someApiCallUserDoesNotExist();
+    expect(response.status).toBe(404);
+    expect(JSON.parse(response.body).error).toBe('Usuário não encontrado.');
   });
 
   test('should return 200 if SNS publish is successful', async () => {
-    try {
-      const response = await someApiCallSNSPublishSuccess();
-      expect(response.status).toBe(200);
-      expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
-      expect(SNS.mock.instances[0].publish).toHaveBeenCalled(); // Verificando se a função publish foi chamada
-    } catch (error) {
-      console.error('Erro no teste "should return 200 if SNS publish is successful":', error);
-    }
+    const response = await someApiCallSNSPublishSuccess();
+    expect(response.status).toBe(200);
+    expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
   });
 
   // Teste de erro de rede no SNS
   test('should return 500 if there is a network error with SNS', async () => {
-    try {
-      const response = await someApiCallSNSNetworkError();
-      expect(response.status).toBe(500);
-      expect(JSON.parse(response.body).error).toBe('Erro de rede ao conectar com o SNS');
-    } catch (error) {
-      console.error('Erro no teste "should return 500 if there is a network error with SNS":', error);
-    }
+    const response = await someApiCallSNSNetworkError();
+    expect(response.status).toBe(500);
+    expect(JSON.parse(response.body).error).toBe('Erro de rede ao conectar com o SNS');
   });
 
   // Teste de erro inesperado
   test('should return 500 for unexpected errors', async () => {
-    try {
-      const response = await someApiCallUnexpectedError();
-      expect(response.status).toBe(500);
-      expect(JSON.parse(response.body).error).toBe('Erro inesperado');
-    } catch (error) {
-      console.error('Erro no teste "should return 500 for unexpected errors":', error);
-    }
+    const response = await someApiCallUnexpectedError();
+    expect(response.status).toBe(500);
+    expect(JSON.parse(response.body).error).toBe('Erro inesperado');
   });
 
   // Verificação de chamadas do mock
@@ -118,6 +81,9 @@ describe('User API Tests', () => {
     const response = await someApiCallSNSPublishSuccess();
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
+
+    // Acessando o mock SNS corretamente
+    const SNS = require('aws-sdk').SNS; // Aqui você acessa o mock correto do SNS
     expect(SNS.mock.instances[0].publish).toHaveBeenCalled(); // Verificando se o publish foi chamado
   });
 });
