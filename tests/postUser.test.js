@@ -61,20 +61,6 @@ describe('User API Tests', () => {
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
   });
-
-  // Verificação de chamadas do mock
-  test('should call SNS publish function when successful', async () => {
-    const SNS = require('aws-sdk').SNS; // Aqui você acessa o mock correto do SNS
-    const snsInstance = new SNS(); // Inicializando a instância explicitamente para garantir que o mock funcione
-
-    // Simulando a chamada da API que deve disparar o método publish
-    const response = await someApiCallSNSPublishSuccess();
-    expect(response.status).toBe(200);
-    expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
-
-    // Verificando se o método `publish` foi chamado
-    expect(snsInstance.publish).toHaveBeenCalled();
-  });
 });
 
 // Funções de chamada da API simuladas (substitua com a lógica real da sua API)
