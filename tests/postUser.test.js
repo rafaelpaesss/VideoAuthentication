@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { handler } = require('../path/to/handler'); // Certifique-se de ajustar o caminho para o arquivo onde a função handler está localizada
+const { handler } = require('../src/postUser'); // Certifique-se de ajustar o caminho para o arquivo onde a função handler está localizada
 
 // Mock da AWS SDK
 jest.mock('aws-sdk', () => {
