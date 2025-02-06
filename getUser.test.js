@@ -13,7 +13,7 @@ describe('getUser handler', () => {
     const event = { body: JSON.stringify({ userName: "testUser" }) };
     const response = await handler(event);
     expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).error).toBe("Senha não fornecida");
+    expect(JSON.parse(response.body).error).toBe("Senha não fornecida"); // Agora esperando a mensagem correta
   });
 
   it('should return 200 and a token if authentication is successful', async () => {
@@ -27,6 +27,6 @@ describe('getUser handler', () => {
     const event = { body: JSON.stringify({ userName: "testUser", password: "wrongPass" }) };
     const response = await handler(event);
     expect(response.statusCode).toBe(500);
-    expect(JSON.parse(response.body).message).toBe("Auth failed");
+    expect(JSON.parse(response.body).message).toBe("Auth failed"); // Aqui a falha de autenticação é esperada
   });
 });
