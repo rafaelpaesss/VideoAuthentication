@@ -3,21 +3,18 @@ const { handler: originalHandler } = require('../src/getUser'); // Importando o 
 // Criando um handler de teste que simula as respostas do getUser
 const handler = async (event) => {
   try {
-    const { body } = event;
-
-    if (!body) {
+    if (!event.body) {
       return { statusCode: 400, body: JSON.stringify({ error: "Corpo da requisição inválido ou ausente" }) };
     }
 
     let parsedBody;
     try {
-      parsedBody = JSON.parse(body);
+      parsedBody = JSON.parse(event.body);
     } catch (err) {
       return { statusCode: 400, body: JSON.stringify({ error: "Formato de JSON inválido" }) };
     }
 
-    const userName = parsedBody.userName;
-    const password = parsedBody.password;
+    const { userName, password } = parsedBody;
 
     if (!userName) {
       return { statusCode: 400, body: JSON.stringify({ error: "Nome de usuário não fornecido" }) };
@@ -41,7 +38,6 @@ const handler = async (event) => {
 
     return { statusCode: 500, body: JSON.stringify({ message: "Auth failed" }) };
   } catch (error) {
-    console.error("Erro inesperado no servidor:", error);
     return { statusCode: 500, body: JSON.stringify({ error: "Erro interno do servidor" }) };
   }
 };
