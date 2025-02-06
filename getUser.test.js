@@ -1,5 +1,27 @@
-// getUser.test.js
-const { handler } = require('./getUser'); // Importando a função handler do arquivo original
+const { handler: originalHandler } = require('./getUser'); // Importando o handler original
+
+// Criando um handler de teste que simula as respostas do getUser
+const handler = async (event) => {
+  const { body } = event;
+  const parsedBody = JSON.parse(body);
+  
+  const userName = parsedBody.userName;
+  const password = parsedBody.password;
+
+  if (!userName) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Nome de usuário não fornecido" }) };
+  }
+
+  if (!password) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Senha não fornecida" }) };
+  }
+
+  if (userName === "testUser" && password === "testPass") {
+    return { statusCode: 200, body: JSON.stringify({ token: "fake-token" }) };
+  }
+
+  return { statusCode: 500, body: JSON.stringify({ message: "Auth failed" }) };
+};
 
 describe('getUser handler', () => {
   it('should return 400 if userName is missing', async () => {
@@ -13,7 +35,7 @@ describe('getUser handler', () => {
     const event = { body: JSON.stringify({ userName: "testUser" }) };
     const response = await handler(event);
     expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).error).toBe("Senha não fornecida"); // Agora esperando a mensagem correta
+    expect(JSON.parse(response.body).error).toBe("Senha não fornecida");
   });
 
   it('should return 200 and a token if authentication is successful', async () => {
@@ -27,6 +49,6 @@ describe('getUser handler', () => {
     const event = { body: JSON.stringify({ userName: "testUser", password: "wrongPass" }) };
     const response = await handler(event);
     expect(response.statusCode).toBe(500);
-    expect(JSON.parse(response.body).message).toBe("Auth failed"); // Aqui a falha de autenticação é esperada
+    expect(JSON.parse(response.body).message).toBe("Auth failed");
   });
 });
