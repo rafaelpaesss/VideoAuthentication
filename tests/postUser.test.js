@@ -1,6 +1,12 @@
 const AWS = require('aws-sdk');
 const { handler } = require('../src/postUser');
 
+// Adicionando o manipulador de rejeições não tratadas
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Rejeição não tratada:', reason);
+  // Você pode adicionar um comportamento customizado aqui, como enviar para logs, etc.
+});
+
 jest.mock('aws-sdk', () => {
   const mockCognito = {
     adminGetUser: jest.fn(),
@@ -49,7 +55,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(400);
       expect(JSON.parse(response.body).error).toBe('Usuário já existe.');
     } catch (error) {
-      console.error(error);
+      console.error('Erro:', error);
     }
   });
 
@@ -72,7 +78,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(500);
       expect(JSON.parse(response.body).error).toBe('Erro ao criar usuário');
     } catch (error) {
-      console.error(error);
+      console.error('Erro:', error);
     }
   });
 
@@ -99,7 +105,7 @@ describe('postUser handler', () => {
         'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!'
       );
     } catch (error) {
-      console.error(error);
+      console.error('Erro:', error);
     }
   });
 
@@ -123,7 +129,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(500);
       expect(JSON.parse(response.body).error).toBe('Erro ao publicar no SNS');
     } catch (error) {
-      console.error(error);
+      console.error('Erro:', error);
     }
   });
 
@@ -148,7 +154,7 @@ describe('postUser handler', () => {
       expect(response.statusCode).toBe(500);
       expect(JSON.parse(response.body).error).toBe('Erro ao criar a assinatura no SNS');
     } catch (error) {
-      console.error(error);
+      console.error('Erro:', error);
     }
   });
 });
