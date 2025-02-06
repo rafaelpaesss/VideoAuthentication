@@ -82,9 +82,12 @@ describe('User API Tests', () => {
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
 
-    // Acessando o mock SNS corretamente
+    // Acessando a instância do mock SNS corretamente
     const SNS = require('aws-sdk').SNS; // Aqui você acessa o mock correto do SNS
-    expect(SNS.mock.instances[0].publish).toHaveBeenCalled(); // Verificando se o publish foi chamado
+    const snsInstance = SNS.mock.instances[0]; // Acessa a instância do mock
+
+    // Verificando se o método `publish` foi chamado
+    expect(snsInstance.publish).toHaveBeenCalled();
   });
 });
 
