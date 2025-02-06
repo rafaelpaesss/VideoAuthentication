@@ -74,6 +74,7 @@ const handler = async (event) => {
             }),
         };
     } catch (error) {
+        console.error('Erro no handler:', error);  // Log de erro para debugging
         return {
             statusCode: 500,
             body: JSON.stringify({ message: 'Erro ao processar a solicitação.' }),
