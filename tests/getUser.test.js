@@ -1,4 +1,4 @@
-const { handler: originalHandler } = require('./getUser'); // Importando o handler original
+const { handler: originalHandler } = require('../src/getUser'); // Importando o handler original
 
 // Criando um handler de teste que simula as respostas do getUser
 const handler = async (event) => {
