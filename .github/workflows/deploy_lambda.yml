@@ -23,7 +23,7 @@ jobs:
         run: yarn install --frozen-lockfile
       
       - name: Add missing package
-        run: yarn add @aws-sdk/client-cognito-identity-provider
+        run: yarn add @aws-sdk/client-cognito-identity-provider jest
 
       - name: Run tests and coverage
         run: yarn test:cov
