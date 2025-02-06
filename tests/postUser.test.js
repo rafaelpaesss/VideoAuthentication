@@ -1,12 +1,6 @@
 const AWS = require('aws-sdk');
 const { handler } = require('../src/postUser');
 
-// Adicionando o manipulador global para rejeições não tratadas
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Rejeição não tratada:', reason);
-  // Aqui você pode adicionar uma lógica adicional, como logging
-});
-
 jest.mock('aws-sdk', () => {
   const mockCognito = {
     adminGetUser: jest.fn(),
