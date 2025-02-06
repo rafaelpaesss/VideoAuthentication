@@ -1,3 +1,12 @@
+const { handler } = require('./getUser'); // Corrija o caminho do arquivo se necessário
+const { CognitoIdentityProviderClient } = require('@aws-sdk/client-cognito-identity-provider');
+
+jest.mock('@aws-sdk/client-cognito-identity-provider', () => {
+  return {
+    CognitoIdentityProviderClient: jest.fn(),
+  };
+});
+
 describe("getUser handler", () => {
   it("should return 400 if userName is missing", async () => {
     const event = { body: JSON.stringify({ password: "testPass" }) };
