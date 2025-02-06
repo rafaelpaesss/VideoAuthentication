@@ -37,35 +37,50 @@ const handler = async (event) => {
             };
         } catch (error) {
             if (error.code !== 'UserNotFoundException') {
-                throw error;
+                throw error; // Se o erro for diferente de "UserNotFoundException", lança o erro
             }
         }
 
         // Cria o novo usuário no Cognito
-        await cognito.signUp({
-            ClientId: '2kq38icmnl2o8tnp849f04tq57',
-            Username: userName,
-            Password: password,
-            UserAttributes: [
-                { Name: 'email', Value: email },
-                { Name: 'custom:cpf', Value: cpf },
-                { Name: 'custom:endereco', Value: endereco },
-            ],
-        }).promise();
+        try {
+            await cognito.signUp({
+                ClientId: '2kq38icmnl2o8tnp849f04tq57',
+                Username: userName,
+                Password: password,
+                UserAttributes: [
+                    { Name: 'email', Value: email },
+                    { Name: 'custom:cpf', Value: cpf },
+                    { Name: 'custom:endereco', Value: endereco },
+                ],
+            }).promise();
+        } catch (error) {
+            console.error('Erro ao criar o usuário no Cognito:', error); // Log para depuração
+            throw error; // Lança erro caso falhe ao criar o usuário
+        }
 
         // Envia uma notificação via SNS
-        await sns.publish({
-            TopicArn: 'arn:aws:sns:us-east-1:300254322294:Teste',
-            Message: JSON.stringify({ userName, email, cpf, endereco }),
-            Subject: 'Novo Cadastro de Usuário',
-        }).promise();
+        try {
+            await sns.publish({
+                TopicArn: 'arn:aws:sns:us-east-1:300254322294:Teste',
+                Message: JSON.stringify({ userName, email, cpf, endereco }),
+                Subject: 'Novo Cadastro de Usuário',
+            }).promise();
+        } catch (error) {
+            console.error('Erro ao publicar no SNS:', error); // Log para depuração
+            throw error; // Lança erro caso falhe ao publicar no SNS
+        }
 
         // Cria uma assinatura no SNS
-        await sns.subscribe({
-            TopicArn: 'arn:aws:sns:us-east-1:300254322294:Teste',
-            Protocol: 'email',
-            Endpoint: email,
-        }).promise();
+        try {
+            await sns.subscribe({
+                TopicArn: 'arn:aws:sns:us-east-1:300254322294:Teste',
+                Protocol: 'email',
+                Endpoint: email,
+            }).promise();
+        } catch (error) {
+            console.error('Erro ao criar a assinatura no SNS:', error); // Log para depuração
+            throw error; // Lança erro caso falhe ao criar a assinatura
+        }
 
         return {
             statusCode: 201,
