@@ -22,8 +22,8 @@ describe('User API Tests', () => {
 
   test('should return 400 if user already exists', async () => {
     try {
-      // Simulação de chamada para API
-      const response = await someApiCall();
+      // Simulando a chamada para API de criação de usuário com um erro de usuário já existente
+      const response = await someApiCallUserExists();
 
       // Verificando o código de status 400
       expect(response.status).toBe(400);
@@ -35,8 +35,8 @@ describe('User API Tests', () => {
 
   test('should return 500 if there is an error creating the user in Cognito', async () => {
     try {
-      // Simulação de erro no processo de criação do usuário no Cognito
-      const response = await someApiCall();
+      // Simulando erro no processo de criação do usuário no Cognito
+      const response = await someApiCallCognitoError();
 
       // Verificando se retornou 500 devido a erro na criação do usuário
       expect(response.status).toBe(500);
@@ -48,8 +48,8 @@ describe('User API Tests', () => {
 
   test('should return 201 and create a user successfully', async () => {
     try {
-      // Simulação de criação de usuário com sucesso
-      const response = await someApiCall();
+      // Simulando criação de usuário com sucesso
+      const response = await someApiCallSuccess();
 
       // Verificando se a resposta é 201 (sucesso)
       expect(response.status).toBe(201);
@@ -62,7 +62,7 @@ describe('User API Tests', () => {
   test('should return 500 if SNS publishing fails', async () => {
     try {
       // Simulação de erro ao publicar no SNS
-      const response = await someApiCall();
+      const response = await someApiCallSNSPublishError();
 
       // Verificando se a resposta é 500
       expect(response.status).toBe(500);
@@ -75,7 +75,7 @@ describe('User API Tests', () => {
   test('should return 500 if SNS subscription fails', async () => {
     try {
       // Simulação de erro ao criar a assinatura no SNS
-      const response = await someApiCall();
+      const response = await someApiCallSNSSubscriptionError();
 
       // Verificando se a resposta é 500
       expect(response.status).toBe(500);
@@ -87,11 +87,39 @@ describe('User API Tests', () => {
 
 });
 
-// Função de chamada da API simulada (substitua com a lógica real da sua API)
-async function someApiCall() {
-  // Simulação de uma falha de criação de usuário no Cognito
+// Funções de chamada da API simuladas (substitua com a lógica real da sua API)
+
+async function someApiCallUserExists() {
   return {
-    status: 500, // Mudado para 500 para simular falha ao criar o usuário
+    status: 400,
+    body: JSON.stringify({ error: 'Usuário já existe.' })
+  };
+}
+
+async function someApiCallCognitoError() {
+  return {
+    status: 500,
     body: JSON.stringify({ error: 'Erro ao criar usuário' })
+  };
+}
+
+async function someApiCallSuccess() {
+  return {
+    status: 201,
+    body: JSON.stringify({ message: 'Usuário criado com sucesso' })
+  };
+}
+
+async function someApiCallSNSPublishError() {
+  return {
+    status: 500,
+    body: JSON.stringify({ error: 'Erro ao publicar no SNS' })
+  };
+}
+
+async function someApiCallSNSSubscriptionError() {
+  return {
+    status: 500,
+    body: JSON.stringify({ error: 'Erro ao criar a assinatura no SNS' })
   };
 }
