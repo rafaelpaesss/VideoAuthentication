@@ -37,7 +37,11 @@ const handler = async (event) => {
             };
         } catch (error) {
             if (error.code !== 'UserNotFoundException') {
-                throw error; // Se o erro for diferente de "UserNotFoundException", lança o erro
+                console.error('Erro ao verificar o usuário no Cognito:', error);
+                return {
+                    statusCode: 500,
+                    body: JSON.stringify({ message: 'Erro ao verificar o usuário no Cognito.' }),
+                };
             }
         }
 
@@ -55,7 +59,10 @@ const handler = async (event) => {
             }).promise();
         } catch (error) {
             console.error('Erro ao criar o usuário no Cognito:', error); // Log para depuração
-            throw error; // Lança erro caso falhe ao criar o usuário
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: 'Erro ao criar o usuário no Cognito.' }),
+            };
         }
 
         // Envia uma notificação via SNS
@@ -67,7 +74,10 @@ const handler = async (event) => {
             }).promise();
         } catch (error) {
             console.error('Erro ao publicar no SNS:', error); // Log para depuração
-            throw error; // Lança erro caso falhe ao publicar no SNS
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: 'Erro ao publicar no SNS.' }),
+            };
         }
 
         // Cria uma assinatura no SNS
@@ -79,7 +89,10 @@ const handler = async (event) => {
             }).promise();
         } catch (error) {
             console.error('Erro ao criar a assinatura no SNS:', error); // Log para depuração
-            throw error; // Lança erro caso falhe ao criar a assinatura
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: 'Erro ao criar a assinatura no SNS.' }),
+            };
         }
 
         return {
@@ -167,5 +180,49 @@ describe('postUser handler', () => {
         expect(JSON.parse(response.body).message).toBe(
             'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!'
         );
+    });
+
+    it('should return an error if the user already exists', async () => {
+        const event = {
+            body: JSON.stringify({
+                userName: 'testuser',
+                email: 'testuser@example.com',
+                password: 'password123',
+                cpf: '12345678901',
+                endereco: 'Rua Exemplo, 123',
+            }),
+        };
+
+        // Mock de respostas das funções
+        cognito.adminGetUser.mockResolvedValueOnce({});  // Simula usuário já existente
+
+        // Chama o handler com o evento simulado
+        const response = await handler(event);
+
+        // Verificações
+        expect(response.statusCode).toBe(400);
+        expect(JSON.parse(response.body).message).toBe('Usuário já existe!');
+    });
+
+    it('should handle errors when creating a user in Cognito', async () => {
+        const event = {
+            body: JSON.stringify({
+                userName: 'testuser',
+                email: 'testuser@example.com',
+                password: 'password123',
+                cpf: '12345678901',
+                endereco: 'Rua Exemplo, 123',
+            }),
+        };
+
+        // Mock de erro na criação do usuário no Cognito
+        cognito.signUp.mockRejectedValueOnce(new Error('Erro ao criar usuário'));
+
+        // Chama o handler com o evento simulado
+        const response = await handler(event);
+
+        // Verificações
+        expect(response.statusCode).toBe(500);
+        expect(JSON.parse(response.body).message).toBe('Erro ao criar o usuário no Cognito.');
     });
 });
