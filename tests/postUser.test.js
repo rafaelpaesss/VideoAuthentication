@@ -1,82 +1,87 @@
 const AWS = require('aws-sdk');
-const cognito = new AWS.CognitoIdentityServiceProvider();
-const sns = new AWS.SNS();
+const { handler } = require('../src/postUser'); // Caminho para o seu handler
 
-const USER_POOL_ID = process.env.USER_POOL_ID || 'us-east-1_n8dcY8my5'; // ID do User Pool do Cognito
-const CLIENT_ID = process.env.CLIENT_ID || '2kq38icmnl2o8tnp849f04tq57'; // Client ID do Cognito
-const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN || 'arn:aws:sns:us-east-1:300254322294:Teste'; // ARN do SNS
+jest.mock('aws-sdk', () => {
+    const mockCognito = {
+        adminGetUser: jest.fn(),
+        signUp: jest.fn(),
+    };
 
-// Função de handler para o POST de usuário
-const handler = async (event) => {
-    try {
-        const { userName, email, password, cpf, endereco } = JSON.parse(event.body);
+    const mockSNS = {
+        publish: jest.fn(),
+        subscribe: jest.fn(),
+    };
 
-        // Verificar se o usuário já existe no Cognito
-        try {
-            const user = await cognito.adminGetUser({
-                UserPoolId: USER_POOL_ID,
-                Username: userName,
-            }).promise();
+    return {
+        CognitoIdentityServiceProvider: jest.fn(() => mockCognito),
+        SNS: jest.fn(() => mockSNS),
+    };
+});
 
-            if (user) {
-                return {
-                    statusCode: 400,
-                    body: JSON.stringify({ message: 'Usuário já existe' }),
-                };
-            }
-        } catch (err) {
-            if (err.code !== 'UserNotFoundException') {
-                throw err; // Se for outro erro, lançamos a exceção
-            }
-        }
+describe('postUser handler', () => {
+    let cognito;
+    let sns;
 
-        // Registrar novo usuário no Cognito
-        const signUpResponse = await cognito.signUp({
-            ClientId: CLIENT_ID,
-            Username: userName,
-            Password: password,
+    beforeEach(() => {
+        cognito = new AWS.CognitoIdentityServiceProvider();
+        sns = new AWS.SNS();
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks(); // Limpa todos os mocks após cada teste
+    });
+
+    it('should successfully register a user, send a notification, and create an SNS subscription', async () => {
+        const event = {
+            body: JSON.stringify({
+                userName: 'testuser',
+                email: 'testuser@example.com',
+                password: 'password123',
+                cpf: '12345678901',
+                endereco: 'Rua Exemplo, 123',
+            }),
+        };
+
+        cognito.adminGetUser.mockRejectedValueOnce({ code: 'UserNotFoundException' });
+        cognito.signUp.mockResolvedValueOnce({});
+        sns.publish.mockResolvedValueOnce({});
+        sns.subscribe.mockResolvedValueOnce({});
+
+        const response = await handler(event);
+
+        expect(cognito.adminGetUser).toHaveBeenCalledWith({
+            UserPoolId: 'us-east-1_n8dcY8my5',
+            Username: 'testuser',
+        });
+        expect(cognito.signUp).toHaveBeenCalledWith({
+            ClientId: '2kq38icmnl2o8tnp849f04tq57',
+            Username: 'testuser',
+            Password: 'password123',
             UserAttributes: [
-                { Name: 'email', Value: email },
-                { Name: 'custom:cpf', Value: cpf },
-                { Name: 'custom:endereco', Value: endereco },
+                { Name: 'email', Value: 'testuser@example.com' },
+                { Name: 'custom:cpf', Value: '12345678901' },
+                { Name: 'custom:endereco', Value: 'Rua Exemplo, 123' },
             ],
-        }).promise();
-
-        // Publicar uma mensagem no SNS
-        const snsPublishResponse = await sns.publish({
-            TopicArn: SNS_TOPIC_ARN,
+        });
+        expect(sns.publish).toHaveBeenCalledWith({
+            TopicArn: 'arn:aws:sns:us-east-1:300254322294:Teste',
             Message: JSON.stringify({
-                userName,
-                email,
-                cpf,
-                endereco,
+                userName: 'testuser',
+                email: 'testuser@example.com',
+                cpf: '12345678901',
+                endereco: 'Rua Exemplo, 123',
             }),
             Subject: 'Novo Cadastro de Usuário',
-        }).promise();
-
-        // Inscrever o email no SNS
-        const snsSubscribeResponse = await sns.subscribe({
-            TopicArn: SNS_TOPIC_ARN,
+        });
+        expect(sns.subscribe).toHaveBeenCalledWith({
+            TopicArn: 'arn:aws:sns:us-east-1:300254322294:Teste',
             Protocol: 'email',
-            Endpoint: email,
-        }).promise();
+            Endpoint: 'testuser@example.com',
+        });
 
-        // Retornar sucesso
-        return {
-            statusCode: 201,
-            body: JSON.stringify({
-                message: 'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!',
-            }),
-        };
-    } catch (err) {
-        console.error('Erro ao cadastrar usuário:', err);
-
-        // Erro geral
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Erro ao cadastrar o usuário', error: err.message }),
-        };
-    }
-};
-
-module.exports = { handler };
+        expect(response.statusCode).toBe(201);
+        expect(JSON.parse(response.body).message).toBe(
+            'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!'
+        );
+    });
+});
