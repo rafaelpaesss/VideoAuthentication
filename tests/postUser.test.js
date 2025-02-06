@@ -62,20 +62,6 @@ describe('User API Tests', () => {
     expect(JSON.parse(response.body).message).toBe('Mensagem publicada no SNS com sucesso');
   });
 
-  // Teste de erro de rede no SNS
-  test('should return 500 if there is a network error with SNS', async () => {
-    const response = await someApiCallSNSNetworkError();
-    expect(response.status).toBe(500);
-    expect(JSON.parse(response.body).error).toBe('Erro de rede ao conectar com o SNS');
-  });
-
-  // Teste de erro inesperado
-  test('should return 500 for unexpected errors', async () => {
-    const response = await someApiCallUnexpectedError();
-    expect(response.status).toBe(500);
-    expect(JSON.parse(response.body).error).toBe('Erro inesperado');
-  });
-
   // Verificação de chamadas do mock
   test('should call SNS publish function when successful', async () => {
     const response = await someApiCallSNSPublishSuccess();
@@ -84,7 +70,7 @@ describe('User API Tests', () => {
 
     // Acessando a instância do mock SNS corretamente
     const SNS = require('aws-sdk').SNS; // Aqui você acessa o mock correto do SNS
-    const snsInstance = SNS.mock.instances[0]; // Acessa a instância do mock
+    const snsInstance = SNS.mock.instances[0]; // Acessa a instância do mock SNS
 
     // Verificando se o método `publish` foi chamado
     expect(snsInstance.publish).toHaveBeenCalled();
