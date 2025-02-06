@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { handler: originalHandler } = require('../src/postUser'); // Importando o handler original
+const originalHandler = require('../src/postUser').handler;
 
 // Mockando as dependências do AWS SDK
 jest.mock('aws-sdk', () => {
