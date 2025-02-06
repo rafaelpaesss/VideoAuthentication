@@ -1,5 +1,3 @@
-const AWS = require('aws-sdk');
-
 jest.mock('aws-sdk', () => {
   const mockCognito = {
     adminGetUser: jest.fn(),
@@ -20,71 +18,6 @@ jest.mock('aws-sdk', () => {
 const cognito = new AWS.CognitoIdentityServiceProvider();
 const sns = new AWS.SNS();
 
-// Handler diretamente no arquivo de teste
-const handler = async (event) => {
-  const { userName, email, password, cpf, endereco } = JSON.parse(event.body);
-
-  const params = {
-    UserPoolId: process.env.COGNITO_USER_POOL_ID,
-    Username: userName,
-  };
-
-  try {
-    // Verifica se o usuário já existe
-    await cognito.adminGetUser(params).promise();
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: "Usuário já existe." }),
-    };
-  } catch (err) {
-    if (err.code !== 'UserNotFoundException') {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: err.message }),
-      };
-    }
-  }
-
-  // Se o usuário não existe, cria o usuário no Cognito
-  try {
-    await cognito.signUp({
-      ClientId: process.env.COGNITO_CLIENT_ID,
-      Username: userName,
-      Password: password,
-      UserAttributes: [
-        { Name: 'email', Value: email },
-        { Name: 'cpf', Value: cpf },
-        { Name: 'address', Value: endereco },
-      ],
-    }).promise();
-
-    // Publica no SNS
-    await sns.publish({
-      Message: `Novo usuário cadastrado: ${userName}`,
-      TopicArn: process.env.SNS_TOPIC_ARN,
-    }).promise();
-
-    // Assina o SNS
-    await sns.subscribe({
-      Protocol: 'email',
-      TopicArn: process.env.SNS_TOPIC_ARN,
-      Endpoint: email,
-    }).promise();
-
-    return {
-      statusCode: 201,
-      body: JSON.stringify({
-        message: "Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!",
-      }),
-    };
-  } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
-    };
-  }
-};
-
 describe('postUser handler', () => {
   it('should return 400 if user already exists', async () => {
     const event = {
@@ -99,7 +32,6 @@ describe('postUser handler', () => {
 
     // Simula o erro de usuário já existente
     cognito.adminGetUser.mockResolvedValueOnce({});
-
     const response = await handler(event);
     
     expect(response.statusCode).toBe(400);
@@ -149,7 +81,7 @@ describe('postUser handler', () => {
     const response = await handler(event);
 
     expect(response.statusCode).toBe(500);
-    expect(JSON.parse(response.body).error).toBe('Cognito error');
+    expect(JSON.parse(response.body).error).toBe('Erro ao criar o usuário ou publicar no SNS: Cognito error');
   });
 
   it('should return 500 if SNS publishing fails', async () => {
@@ -171,7 +103,7 @@ describe('postUser handler', () => {
     const response = await handler(event);
 
     expect(response.statusCode).toBe(500);
-    expect(JSON.parse(response.body).error).toBe('Erro ao publicar no SNS');
+    expect(JSON.parse(response.body).error).toBe('Erro ao criar o usuário ou publicar no SNS: Erro ao publicar no SNS');
   });
 
   it('should return 500 if SNS subscription fails', async () => {
@@ -193,6 +125,6 @@ describe('postUser handler', () => {
     const response = await handler(event);
 
     expect(response.statusCode).toBe(500);
-    expect(JSON.parse(response.body).error).toBe('Erro ao criar a assinatura no SNS');
+    expect(JSON.parse(response.body).error).toBe('Erro ao criar o usuário ou publicar no SNS: Erro ao criar a assinatura no SNS');
   });
 });
