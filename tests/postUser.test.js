@@ -1,3 +1,6 @@
+import AWS from 'aws-sdk'; // Importando o SDK da AWS
+
+// Mock da AWS SDK
 jest.mock('aws-sdk', () => {
   const mockCognito = {
     adminGetUser: jest.fn(),
@@ -15,7 +18,7 @@ jest.mock('aws-sdk', () => {
   };
 });
 
-const cognito = new AWS.CognitoIdentityServiceProvider();
+const cognito = new AWS.CognitoIdentityServiceProvider(); // Agora o AWS está definido
 const sns = new AWS.SNS();
 
 describe('postUser handler', () => {
