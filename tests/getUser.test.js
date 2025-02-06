@@ -3,8 +3,19 @@ const { handler: originalHandler } = require('../src/getUser'); // Importando o 
 // Criando um handler de teste que simula as respostas do getUser
 const handler = async (event) => {
   const { body } = event;
-  const parsedBody = JSON.parse(body);
-  
+
+  // Verificando se o corpo está presente
+  if (!body) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Corpo da requisição inválido ou ausente" }) };
+  }
+
+  let parsedBody;
+  try {
+    parsedBody = JSON.parse(body);
+  } catch (err) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Formato de JSON inválido" }) };
+  }
+
   const userName = parsedBody.userName;
   const password = parsedBody.password;
 
@@ -17,7 +28,15 @@ const handler = async (event) => {
   }
 
   if (userName === "testUser" && password === "testPass") {
-    return { statusCode: 200, body: JSON.stringify({ token: "fake-token" }) };
+    return { 
+      statusCode: 200, 
+      body: JSON.stringify({ 
+        token: "fake-token", 
+        email: "testuser@example.com", 
+        endereco: "Rua Teste, 123", 
+        cpf: "123.456.789-00"
+      }) 
+    };
   }
 
   return { statusCode: 500, body: JSON.stringify({ message: "Auth failed" }) };
@@ -68,9 +87,9 @@ describe('getUser handler', () => {
 
     expect(response.statusCode).toBe(200);
     expect(responseBody.token).toBe("fake-token");
-    expect(responseBody.email).toBeDefined();
-    expect(responseBody.endereco).toBeDefined();
-    expect(responseBody.cpf).toBeDefined();
+    expect(responseBody.email).toBe("testuser@example.com");
+    expect(responseBody.endereco).toBe("Rua Teste, 123");
+    expect(responseBody.cpf).toBe("123.456.789-00");
   });
 
   // Novo teste: Verificar se o formato do JSON é inválido
