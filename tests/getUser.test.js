@@ -103,13 +103,21 @@ describe('getUser handler', () => {
 
   it('should return 500 if there is an unexpected error', async () => {
     const event = { body: JSON.stringify({ userName: "testUser", password: "testPass" }) };
-
-    // Simulando um erro inesperado
-    jest.spyOn(require('../src/getUser'), 'handler').mockImplementationOnce(() => {
+  
+    // Criando um mock que simula um erro no handler
+    const errorHandler = jest.fn().mockImplementation(() => {
       throw new Error("Erro inesperado no servidor");
     });
-
+  
+    // Substituindo temporariamente o handler original
+    const originalHandlerRef = handler;
+    global.handler = errorHandler;
+  
     const response = await handler(event);
+  
+    // Restaurando o handler original
+    global.handler = originalHandlerRef;
+  
     expect(response.statusCode).toBe(500);
     expect(JSON.parse(response.body).error).toBe("Erro interno do servidor");
   });
