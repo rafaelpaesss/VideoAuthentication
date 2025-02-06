@@ -1,10 +1,7 @@
 const AWS = require('aws-sdk');
-const { handler: originalHandler } = require('../src/postUser');
+const { handler } = require('../src/postUser'); // Importando o handler original
 
-process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled Rejection:', reason);
-});
-
+// Mockando as dependências do AWS SDK
 jest.mock('aws-sdk', () => {
   const mockCognito = {
     adminGetUser: jest.fn(),
@@ -32,7 +29,7 @@ describe('postUser handler', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.clearAllMocks(); // Limpa todos os mocks após cada teste
   });
 
   it('should return 400 if user already exists', () => {
@@ -46,12 +43,14 @@ describe('postUser handler', () => {
       }),
     };
 
-    cognito.adminGetUser.mockReturnValueOnce(Promise.resolve({}));
+    cognito.adminGetUser.mockResolvedValueOnce({}); // Usuário encontrado
 
-    return originalHandler(event).then((response) => {
-      expect(response.statusCode).toBe(400);
-      expect(JSON.parse(response.body).error).toBe('Usuário já existe.');
-    });
+    return handler(event)
+      .then((response) => {
+        expect(response.statusCode).toBe(400);
+        expect(JSON.parse(response.body).error).toBe('Usuário já existe.');
+      })
+      .catch((error) => fail(`Erro inesperado: ${error}`));
   });
 
   it('should return 500 if there is an error creating the user in Cognito', () => {
@@ -65,17 +64,15 @@ describe('postUser handler', () => {
       }),
     };
 
-    cognito.adminGetUser.mockReturnValueOnce(Promise.reject({ code: 'UserNotFoundException' }));
-    cognito.signUp.mockReturnValueOnce(Promise.reject(new Error('Erro ao criar usuário')));
+    cognito.adminGetUser.mockRejectedValueOnce(new Error('UserNotFoundException'));
+    cognito.signUp.mockRejectedValueOnce(new Error('Erro ao criar usuário'));
 
-    return originalHandler(event)
+    return handler(event)
       .then((response) => {
         expect(response.statusCode).toBe(500);
         expect(JSON.parse(response.body).error).toBe('Erro ao criar usuário');
       })
-      .catch((error) => {
-        console.error('Erro inesperado:', error);
-      });
+      .catch((error) => fail(`Erro inesperado: ${error}`));
   });
 
   it('should return 201 and create a user successfully', () => {
@@ -89,17 +86,19 @@ describe('postUser handler', () => {
       }),
     };
 
-    cognito.adminGetUser.mockReturnValueOnce(Promise.reject({ code: 'UserNotFoundException' }));
-    cognito.signUp.mockReturnValueOnce(Promise.resolve({}));
-    sns.publish.mockReturnValueOnce(Promise.resolve({}));
-    sns.subscribe.mockReturnValueOnce(Promise.resolve({}));
+    cognito.adminGetUser.mockRejectedValueOnce(new Error('UserNotFoundException'));
+    cognito.signUp.mockResolvedValueOnce({});
+    sns.publish.mockResolvedValueOnce({});
+    sns.subscribe.mockResolvedValueOnce({});
 
-    return originalHandler(event).then((response) => {
-      expect(response.statusCode).toBe(201);
-      expect(JSON.parse(response.body).message).toBe(
-        'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!'
-      );
-    });
+    return handler(event)
+      .then((response) => {
+        expect(response.statusCode).toBe(201);
+        expect(JSON.parse(response.body).message).toBe(
+          'Usuário cadastrado com sucesso, notificado no SNS e assinatura criada!'
+        );
+      })
+      .catch((error) => fail(`Erro inesperado: ${error}`));
   });
 
   it('should return 500 if SNS publishing fails', () => {
@@ -113,18 +112,16 @@ describe('postUser handler', () => {
       }),
     };
 
-    cognito.adminGetUser.mockReturnValueOnce(Promise.reject({ code: 'UserNotFoundException' }));
-    cognito.signUp.mockReturnValueOnce(Promise.resolve({}));
-    sns.publish.mockReturnValueOnce(Promise.reject(new Error('Erro ao publicar no SNS')));
+    cognito.adminGetUser.mockRejectedValueOnce(new Error('UserNotFoundException'));
+    cognito.signUp.mockResolvedValueOnce({});
+    sns.publish.mockRejectedValueOnce(new Error('Erro ao publicar no SNS'));
 
-    return originalHandler(event)
+    return handler(event)
       .then((response) => {
         expect(response.statusCode).toBe(500);
         expect(JSON.parse(response.body).error).toBe('Erro ao publicar no SNS');
       })
-      .catch((error) => {
-        console.error('Erro inesperado:', error);
-      });
+      .catch((error) => fail(`Erro inesperado: ${error}`));
   });
 
   it('should return 500 if SNS subscription fails', () => {
@@ -138,18 +135,16 @@ describe('postUser handler', () => {
       }),
     };
 
-    cognito.adminGetUser.mockReturnValueOnce(Promise.reject({ code: 'UserNotFoundException' }));
-    cognito.signUp.mockReturnValueOnce(Promise.resolve({}));
-    sns.publish.mockReturnValueOnce(Promise.resolve({}));
-    sns.subscribe.mockReturnValueOnce(Promise.reject(new Error('Erro ao criar a assinatura no SNS')));
+    cognito.adminGetUser.mockRejectedValueOnce(new Error('UserNotFoundException'));
+    cognito.signUp.mockResolvedValueOnce({});
+    sns.publish.mockResolvedValueOnce({});
+    sns.subscribe.mockRejectedValueOnce(new Error('Erro ao criar a assinatura no SNS'));
 
-    return originalHandler(event)
+    return handler(event)
       .then((response) => {
         expect(response.statusCode).toBe(500);
         expect(JSON.parse(response.body).error).toBe('Erro ao criar a assinatura no SNS');
       })
-      .catch((error) => {
-        console.error('Erro inesperado:', error);
-      });
+      .catch((error) => fail(`Erro inesperado: ${error}`));
   });
 });
