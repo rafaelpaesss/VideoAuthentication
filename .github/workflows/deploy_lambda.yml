@@ -26,7 +26,7 @@ jobs:
         run: yarn add @aws-sdk/client-cognito-identity-provider jest
 
       - name: Run tests and coverage
-        run: yarn test --coverage --runInBand
+        run: yarn test:cov
 
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarcloud-github-action@master
